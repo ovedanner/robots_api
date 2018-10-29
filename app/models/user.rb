@@ -7,8 +7,14 @@ class User < ApplicationRecord
                     format: { with: URI::MailTo::EMAIL_REGEXP },
                     uniqueness: true
   validates :firstname, presence: true, allow_blank: false
-  validates :password, presence: true,
-                       length: { minimum: 8 }
-  validates :password, format: { with: /[A-Z]/ }
-  validates :password, format: { with: /[0-9]/ }
+  validates :password, presence: true, password: true
+
+  # Uses the given Google info to either create a new user
+  # or find an existing one.
+  def self.find_or_create_from_google(google_info)
+    email = google_info&.emails&.first&.value
+    find_or_create_by(email: email) do |user|
+      user.firstname = google_info.display_name.split(' ')[0]
+    end
+  end
 end

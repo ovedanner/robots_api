@@ -10,6 +10,8 @@ gem 'pg'
 gem 'rack-cors', require: 'rack/cors'
 gem 'rails', '~> 5.2.1'
 gem 'simple_command'
+gem 'signet'
+gem 'google-api-client'
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder

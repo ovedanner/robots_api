@@ -3,15 +3,23 @@ module RequestHelpers
   extend ActiveSupport
 
   def assert_created
-    expect(response.content_type).to eq('application/json')
+    expect(response.content_type).to eq('application/vnd.api+json')
     expect(response).to have_http_status :created
     body = response_body
     expect(body).to include(:data)
     expect(body[:data]).to include(:id, :attributes)
   end
 
+  def assert_success
+    expect(response).to have_http_status :success
+  end
+
   def assert_unauthorized
     expect(response).to have_http_status :unauthorized
+  end
+
+  def assert_validation_errors
+    expect(response).to have_http_status 422
   end
 
   def assert_has_attributes(attrs)

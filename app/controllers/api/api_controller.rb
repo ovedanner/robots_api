@@ -22,5 +22,13 @@ module Api
         t&.user
       end
     end
+
+    # Renders validation errors for the given resource.
+    def render_json_validation_error(resource)
+      render json: resource,
+             status: 422,
+             adapter: :json_api,
+             serializer: ActiveModel::Serializer::ErrorSerializer
+    end
   end
 end
