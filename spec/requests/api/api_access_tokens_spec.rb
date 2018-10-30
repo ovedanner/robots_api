@@ -32,9 +32,8 @@ RSpec.describe 'Api::AccessTokens', type: :request do
 
     context 'with valid credentials' do
       it 'deletes the access token' do
-        delete "/api/access_tokens/#{access_token.id}", headers: {
-          'Authorization': "Token token=#{access_token.token}"
-        }
+        delete "/api/access_tokens/#{access_token.id}",
+               headers: auth_header(access_token.token)
         assert_success
       end
     end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_10_25_153046) do
+ActiveRecord::Schema.define(version: 2018_10_30_131943) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -23,6 +23,20 @@ ActiveRecord::Schema.define(version: 2018_10_25_153046) do
     t.datetime "expires_at", null: false
     t.index ["token"], name: "index_access_tokens_on_token"
     t.index ["user_id"], name: "index_access_tokens_on_user_id"
+  end
+
+  create_table "room_users", id: false, force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "room_id", null: false
+  end
+
+  create_table "rooms", force: :cascade do |t|
+    t.integer "owner_id", null: false
+    t.json "board"
+    t.boolean "open", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "name", null: false
   end
 
   create_table "users", force: :cascade do |t|

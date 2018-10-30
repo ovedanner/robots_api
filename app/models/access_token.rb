@@ -3,7 +3,7 @@ class AccessToken < ApplicationRecord
   has_secure_token
   belongs_to :user
 
-  validates :user_id, presence: true
+  validates :user, presence: true
   validates :token, uniqueness: true
 
   # Set the token expiration date.

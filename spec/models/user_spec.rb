@@ -8,11 +8,15 @@ RSpec.describe User, type: :model do
     it { is_expected.not_to allow_value('noatsign.com').for(:email) }
   end
 
+  describe '#room_user' do
+    it { is_expected.to have_many(:room_user) }
+  end
+
   describe '#password' do
     it { is_expected.to have_secure_password }
-    it { is_expected.to validate_length_of(:password).is_at_least(8) }
     it { is_expected.to allow_value('Ddfdav499X!*fd%').for(:password) }
 
+    it { is_expected.not_to allow_value('Ta1234').for(:password) }
     it { is_expected.not_to allow_value('test1234').for(:password) }
     it { is_expected.not_to allow_value('TestTest').for(:password) }
   end

@@ -18,6 +18,10 @@ module RequestHelpers
     expect(response).to have_http_status :unauthorized
   end
 
+  def assert_not_found
+    expect(response).to have_http_status :not_found
+  end
+
   def assert_validation_errors
     expect(response).to have_http_status 422
   end
@@ -29,6 +33,12 @@ module RequestHelpers
 
   def response_body
     HashWithIndifferentAccess.new(JSON.parse(response.body)) || {}
+  end
+
+  def auth_header(token)
+    {
+      'Authorization': "Token token=#{token}"
+    }
   end
 end
 

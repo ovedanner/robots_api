@@ -2,6 +2,8 @@
 class User < ApplicationRecord
   has_secure_password
 
+  has_many :room_user
+
   validates :email, presence: true,
                     allow_blank: false,
                     format: { with: URI::MailTo::EMAIL_REGEXP },
