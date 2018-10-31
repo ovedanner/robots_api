@@ -1,6 +1,9 @@
 # User model
 class User < ApplicationRecord
-  has_secure_password
+  # We want to be able to create a user without a password.
+  # This happens when the user is created through another
+  # identity provider.
+  has_secure_password validations: false
 
   has_many :room_user
 
@@ -9,7 +12,7 @@ class User < ApplicationRecord
                     format: { with: URI::MailTo::EMAIL_REGEXP },
                     uniqueness: true
   validates :firstname, presence: true, allow_blank: false
-  validates :password, presence: true, password: true
+  validates :password, presence: false, password: true
 
   # Uses the given Google info to either create a new user
   # or find an existing one.
@@ -18,5 +21,12 @@ class User < ApplicationRecord
     find_or_create_by(email: email) do |user|
       user.firstname = google_info.display_name.split(' ')[0]
     end
+  end
+
+  # Returns members of the given room.
+  def self.get_room_members(room_id)
+    room_users = RoomUser.where(room_id: room_id)
+    user_ids = room_users.map(&:user_id)
+    where(id: user_ids)
   end
 end

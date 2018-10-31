@@ -7,6 +7,12 @@ module Api
       render json: @rooms
     end
 
+    # Retrieve all members in the room.
+    def members
+      @users = User.get_room_members(params.require(:room_id))
+      render json: @users
+    end
+
     # Creates a new room
     def create
       @room = Room.new(room_attributes.merge(owner: current_user))
@@ -14,6 +20,16 @@ module Api
         render json: @room, status: :created
       else
         render_json_validation_error(@room)
+      end
+    end
+
+    # View an existing room.
+    def show
+      @room = Room.find(params.require(:id))
+      if @room
+        render json: @room
+      else
+        render json: {}, status: :not_found
       end
     end
 
@@ -29,7 +45,7 @@ module Api
 
     # The logged in user wants to join the room.
     def join
-      if Room.add_user(params.require(:id), current_user.id)
+      if Room.add_user(params.require(:room_id), current_user.id)
         render json: {}, status: 200
       else
         render json: {}, status: :bad_request
