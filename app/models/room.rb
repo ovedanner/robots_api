@@ -9,11 +9,14 @@ class Room < ApplicationRecord
   validates_inclusion_of :open, in: [true, false]
 
   # Adds the given user to the given room if possible.
+  # If he is already in the room, consider it a success
+  # as well.
   def self.add_user(room_id, user_id)
     room = find(room_id)
     params = { room_id: room_id, user_id: user_id }
-    if room&.open && !RoomUser.exists?(params)
-      RoomUser.create(params)
+    if room&.open
+      RoomUser.create(params) unless RoomUser.exists?(params)
+      true
     else
       false
     end

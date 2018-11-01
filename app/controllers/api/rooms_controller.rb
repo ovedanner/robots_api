@@ -3,8 +3,8 @@ module Api
   class RoomsController < ApiController
     # Retrieve all rooms
     def index
-      @rooms = Room.all
-      render json: @rooms
+      @rooms = Room.includes(:owner).all
+      render json: @rooms, include: [:owner]
     end
 
     # Retrieve all members in the room.
@@ -25,9 +25,9 @@ module Api
 
     # View an existing room.
     def show
-      @room = Room.find(params.require(:id))
+      @room = Room.includes(:owner).find(params.require(:id))
       if @room
-        render json: @room
+        render json: @room, include: [:owner]
       else
         render json: {}, status: :not_found
       end

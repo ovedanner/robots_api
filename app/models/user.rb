@@ -14,6 +14,11 @@ class User < ApplicationRecord
   validates :firstname, presence: true, allow_blank: false
   validates :password, presence: false, password: true
 
+  # Determines if the user is a member of the given room.
+  def is_member_of_room?(room)
+    room.open && RoomUser.exists?(room_id: room.id, user_id: id)
+  end
+
   # Uses the given Google info to either create a new user
   # or find an existing one.
   def self.find_or_create_from_google(google_info)

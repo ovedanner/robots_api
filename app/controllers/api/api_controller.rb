@@ -6,7 +6,7 @@ module Api
     before_action :require_authentication
 
     def require_authentication
-      authenticate_token || render(json: {}, status: :unauthorized)
+      render(json: {}, status: :unauthorized) unless current_user
     end
 
     def current_user
