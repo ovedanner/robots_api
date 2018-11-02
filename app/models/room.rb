@@ -8,13 +8,12 @@ class Room < ApplicationRecord
   validates :board, json: true, allow_blank: true
   validates_inclusion_of :open, in: [true, false]
 
-  # Adds the given user to the given room if possible.
+  # Adds the given user to the room if possible.
   # If he is already in the room, consider it a success
   # as well.
-  def self.add_user(room_id, user_id)
-    room = find(room_id)
-    params = { room_id: room_id, user_id: user_id }
-    if room&.open
+  def add_user(user)
+    params = { room_id: id, user_id: user.id }
+    if open
       RoomUser.create(params) unless RoomUser.exists?(params)
       true
     else
@@ -22,9 +21,15 @@ class Room < ApplicationRecord
     end
   end
 
-  # Removes the given user from the given room.
-  def self.remove_user(room_id, user_id)
-    room_user = RoomUser.where(room_id: room_id, user_id: user_id)
-    room_user&.destroy
+  # Removes the given user from the given room. If
+  # the user is not in the room, consider it a success
+  # as well.
+  def remove_user(user)
+    room_user = RoomUser.where(room_id: id, user_id: user.id).first
+    if room_user&.destroy
+      true
+    else
+      false
+    end
   end
 end

@@ -14,7 +14,12 @@ class ChatChannel < ApplicationCable::Channel
   end
 
   # Exchange simple text messages.
-  def speak(data)
+  def speak(message)
+    data = message.merge(
+      author: current_user.firstname,
+      author_id: current_user.id,
+    )
+
     ActionCable.server.broadcast "chat_#{@room.id}", data
   end
 end

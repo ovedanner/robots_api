@@ -8,8 +8,12 @@ RSpec.describe User, type: :model do
     it { is_expected.not_to allow_value('noatsign.com').for(:email) }
   end
 
-  describe '#room_user' do
-    it { is_expected.to have_many(:room_user) }
+  describe '#room_users' do
+    it { is_expected.to have_many(:room_users) }
+  end
+
+  describe '#access_tokens' do
+    it { is_expected.to have_many(:access_tokens) }
   end
 
   describe '#password' do

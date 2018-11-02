@@ -2,9 +2,8 @@ require 'rails_helper'
 
 RSpec.describe 'Api::Rooms', type: :request do
   let(:user) do
-    FactoryBot.create(:user, email: 'guy@test.com', password: 'Safe1234')
+    FactoryBot.create(:user_with_access_token, email: 'guy@test.com', password: 'Safe1234')
   end
-  let(:access_token) { FactoryBot.create(:access_token, user: user) }
 
   describe 'POST /api/rooms' do
     let(:room_data) do
@@ -21,7 +20,7 @@ RSpec.describe 'Api::Rooms', type: :request do
     context 'with valid credentials' do
       it 'will succeed' do
         post '/api/rooms', params: room_data,
-                           headers: auth_header(access_token.token)
+                           headers: auth_header(user.access_tokens.first.token)
         assert_created
       end
     end
@@ -55,7 +54,7 @@ RSpec.describe 'Api::Rooms', type: :request do
       it 'will succeed' do
         patch "/api/rooms/#{existing_room.id}",
               params: room_data,
-              headers: auth_header(access_token.token)
+              headers: auth_header(user.access_tokens.first.token)
         assert_success
         room = Room.find(existing_room.id)
         expect(room.board).to eq(room_data[:data][:attributes][:board])
@@ -82,13 +81,13 @@ RSpec.describe 'Api::Rooms', type: :request do
     context 'with valid credentials' do
       it 'will succeed if own room' do
         delete "/api/rooms/#{own_room.id}",
-               headers: auth_header(access_token.token)
+               headers: auth_header(user.access_tokens.first.token)
         assert_success
       end
 
       it 'will fail if not own room' do
         delete "/api/rooms/#{other_room.id}",
-               headers: auth_header(access_token.token)
+               headers: auth_header(user.access_tokens.first.token)
         assert_not_found
       end
     end
@@ -98,6 +97,28 @@ RSpec.describe 'Api::Rooms', type: :request do
         delete "/api/rooms/#{own_room.id}",
                headers: auth_header('doesnotexist')
         assert_unauthorized
+      end
+    end
+  end
+
+  describe 'POST /api/rooms/:id/join' do
+    context 'with valid credentials and open room' do
+      let(:open_room) { FactoryBot.create(:open_room) }
+
+      it 'will succeed' do
+        post "/api/rooms/#{open_room.id}/join",
+             headers: auth_header(user.access_tokens.first.token)
+        assert_success
+      end
+    end
+
+    context 'with valid credentials and closed room' do
+      let(:closed_room) { FactoryBot.create(:closed_room) }
+
+      it 'will succeed' do
+        post "/api/rooms/#{closed_room.id}/join",
+             headers: auth_header(user.access_tokens.first.token)
+        assert_not_found
       end
     end
   end

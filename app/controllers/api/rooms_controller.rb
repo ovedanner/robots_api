@@ -9,8 +9,12 @@ module Api
 
     # Retrieve all members in the room.
     def members
-      @users = User.get_room_members(params.require(:room_id))
-      render json: @users
+      @room = Room.find(params.require(:room_id))
+      if @room
+        render json: @room.members
+      else
+        render json: {}, status: :not_found
+      end
     end
 
     # Creates a new room
@@ -45,25 +49,30 @@ module Api
 
     # The logged in user wants to join the room.
     def join
-      if Room.add_user(params.require(:room_id), current_user.id)
+      @room = Room.find(params.require(:room_id))
+      if @room&.add_user(current_user)
         render json: {}, status: 200
       else
-        render json: {}, status: :bad_request
+        render json: {}, status: :not_found
       end
     end
 
     # The logged in user wants to leave the room.
     def leave
-      Room.remove_user(params.require(:id), current_user.id)
-      render json: {}, status: 200
+      @room = Room.find(params.require(:room_id))
+      if @room&.remove_user(current_user)
+        render json: {}, status: 200
+      else
+        render json: {}, status: :not_found
+      end
     end
 
     # Deletes a room.
     def destroy
       # A user can only destroy his own rooms.
-      @room = Room.where(id: params.require(:id), owner: current_user).first
+      @room = Room.includes(:owner).find(params.require(:id))
 
-      if @room
+      if @room && @room.owner.id == current_user.id
         @room.destroy
         render json: {}, status: 200
       else

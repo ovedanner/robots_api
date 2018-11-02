@@ -5,7 +5,8 @@ class User < ApplicationRecord
   # identity provider.
   has_secure_password validations: false
 
-  has_many :room_user
+  has_many :room_users
+  has_many :access_tokens
 
   validates :email, presence: true,
                     allow_blank: false,
@@ -26,12 +27,5 @@ class User < ApplicationRecord
     find_or_create_by(email: email) do |user|
       user.firstname = google_info.display_name.split(' ')[0]
     end
-  end
-
-  # Returns members of the given room.
-  def self.get_room_members(room_id)
-    room_users = RoomUser.where(room_id: room_id)
-    user_ids = room_users.map(&:user_id)
-    where(id: user_ids)
   end
 end
