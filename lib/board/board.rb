@@ -1,4 +1,4 @@
-module Robots
+module Board
   # A board, optionally with positions of its robots and a current goal.
   class Board
     attr_accessor :cells, :goals, :robot_colors, :robot_positions

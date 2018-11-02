@@ -1,4 +1,4 @@
-module Robots
+module Board
   # A board consists of four parts that can be rotated.
   class BoardPart
     # Different board part types
@@ -84,10 +84,12 @@ module Robots
 
   # Merges the rows of the given part with those of this part.
   def merge_cell_rows(other_part)
-    cells = []
+    result = []
 
     cells.length.times do |row|
-      cells << cells[row].concat(other_part.cells[row])
+      result << cells[row].concat(other_part.cells[row])
     end
+
+    result
   end
 end

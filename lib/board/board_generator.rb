@@ -1,4 +1,4 @@
-module Robots
+module Board
   # Generates a random new board from existing parts.
   class BoardGenerator
 
