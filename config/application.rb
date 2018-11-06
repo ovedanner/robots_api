@@ -32,6 +32,7 @@ module RobotsApi
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    # Make sure the /lib directory is eager loaded for prd
     config.eager_load_paths << Rails.root.join('lib')
 
     config.middleware.insert_before 0, Rack::Cors do

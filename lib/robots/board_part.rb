@@ -1,5 +1,6 @@
-module Board
-  # A board consists of four parts that can be rotated.
+module Robots
+  # A board consists of four parts that can be rotated. The
+  # parts are assumed to be square (NxN)
   class BoardPart
     # Different board part types
     RED_GEAR = 1
@@ -62,6 +63,7 @@ module Board
     def rotate_goal_90!(goal)
       # row becomes column
       # column becomes length - row
+      nr_rows = cells.length
       goal_row = goal[:number] / nr_rows
       goal_column = goal[:number] % nr_rows
 
@@ -69,6 +71,17 @@ module Board
       new_goal_column = nr_rows - 1 - goal_row
 
       goal[:number] = (new_goal_row * nr_rows) + new_goal_column
+    end
+
+    # Merges the rows of the given part with those of this part.
+    def merge_cell_rows(other_part)
+      result = []
+
+      cells.length.times do |row|
+        result << cells[row].concat(other_part.cells[row])
+      end
+
+      result
     end
 
     # Makes for easier part checking.
@@ -80,16 +93,5 @@ module Board
 
       result
     end
-  end
-
-  # Merges the rows of the given part with those of this part.
-  def merge_cell_rows(other_part)
-    result = []
-
-    cells.length.times do |row|
-      result << cells[row].concat(other_part.cells[row])
-    end
-
-    result
   end
 end

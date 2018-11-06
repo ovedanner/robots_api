@@ -1,5 +1,5 @@
 module Board
-  # Simply board error class.
+  # Simple board error class.
   class BoardError < StandardError
 
     def initialize(msg = 'Invalid board')

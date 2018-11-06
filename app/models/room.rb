@@ -8,6 +8,11 @@ class Room < ApplicationRecord
   validates :board, json: true, allow_blank: true
   validates_inclusion_of :open, in: [true, false]
 
+  # Whether or not the room is owned by the given user.
+  def owned_by?(user)
+    owner.id == user.id
+  end
+
   # Adds the given user to the room if possible.
   # If he is already in the room, consider it a success
   # as well.
