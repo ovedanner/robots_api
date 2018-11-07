@@ -14,7 +14,7 @@ class GameChannel < ApplicationCable::Channel
   def start(message)
     if @room.owned_by?(current_user)
       @game = Robots::Game.new(@room)
-      @game.start
+      @game.start_game
 
       data = message.merge(
         cells: @game.cells.value,
@@ -26,9 +26,5 @@ class GameChannel < ApplicationCable::Channel
 
       ActionCable.server.broadcast "game_#{@room.id}", data
     end
-  end
-
-  def solve
-
   end
 end

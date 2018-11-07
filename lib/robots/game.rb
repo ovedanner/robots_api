@@ -54,10 +54,19 @@ module Robots
           possible_positions << [r_idx, c_idx] if cells[r_idx][c_idx] < 15
         end
       end
-      nr_robots = robot_colors.length
+
+      colors = robot_colors.slice(0, robot_colors.length)
+      nr_robots = colors.length
       nr_robots.times do
+        pos = possible_positions.delete_at(rand(0...possible_positions.length))
         robot_positions <<
-          possible_positions.delete_at(rand(0...possible_positions.length))
+          {
+            color: colors.delete_at(rand(0...colors.length)),
+            position: {
+              row: pos[0],
+              column: pos[1]
+            }
+          }
       end
     end
 

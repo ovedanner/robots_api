@@ -1,34 +1,26 @@
 module Robots
   # Generates a random new board from existing parts.
   class BoardGenerator
-    # Only initialize the parts once.
-    def self.board_parts
-      @board_parts ||= initialize_parts
-    end
-
-    def self.board_parts=(parts)
-      @board_parts = parts
-    end
-
     # Generates a new board.
     def self.generate
       # Get all board parts.
-      all_board_parts = board_parts
+      all_board_parts = get_board_parts
 
       # Randomly select four of them. TODO: make sure only one of each part type exists.
-      parts = []
-      indices = (0...4).to_a
-      4.times do
-        index = indices.slice!(rand(0...indices.length))
-        parts << all_board_parts[index]
-      end
+      parts = all_board_parts
+      # indices = (0...4).to_a
+      # 4.times do
+      #   index = indices.slice!(rand(0...indices.length))
+      #   parts << all_board_parts[index]
+      # end
 
       # The position of the part in the array indicates
       # its desired position. Rotate parts if needed.
-      parts.each_with_index do |part, index|
-        rotate_times = (index - part.position).abs
-        part.rotate_90!(rotate_times)
-      end
+      # parts.each_with_index do |part, index|
+      #
+      #   rotate_times = (index - part.position).abs
+      #   part.rotate_90!(rotate_times)
+      # end
 
       # Stitch the parts together and update the goal
       # numbers to reflect this.
@@ -83,7 +75,7 @@ module Robots
 
       # Merge the row cells of the first and second pair.
       top_rows = parts[0].merge_cell_rows(parts[1])
-      bottom_rows = parts[1].merge_cell_rows(parts[2])
+      bottom_rows = parts[2].merge_cell_rows(parts[3])
       cells = top_rows.concat(bottom_rows)
 
       # Simply concatenate the goals.
@@ -99,9 +91,9 @@ module Robots
     end
 
     # Initializes the static squares of the board.
-    def self.initialize_parts
+    def self.get_board_parts
       parts = []
-      parts << BoardPart.new(
+      parts << Robots::BoardPart.new(
         [
           [9, 1, 1, 3, 9, 1, 1, 1],
           [8, 0, 0, 0, 0, 0, 0, 0],
@@ -118,11 +110,11 @@ module Robots
           { number: 47, color: :red },
           { number: 49, color: :yellow }
         ],
-        BoardPart::RED_GEAR,
-        BoardPart::P_1
-      ) << BoardPart.new(
+        Robots::BoardPart::RED_GEAR,
+        Robots::BoardPart::P_1
+      ) << Robots::BoardPart.new(
         [
-          [1, 1, 1, 3, 9, 1, 1, 1],
+          [1, 1, 1, 3, 9, 1, 1, 3],
           [0, 0, 0, 0, 0, 0, 0, 2],
           [0, 0, 0, 6, 8, 4, 0, 2],
           [0, 0, 0, 1, 0, 3, 8, 2],
@@ -137,9 +129,9 @@ module Robots
           { number: 34, color: :green },
           { number: 44, color: :blue }
         ],
-        BoardPart::RED_PLANET,
-        BoardPart::P_2
-      ) << BoardPart.new(
+        Robots::BoardPart::RED_PLANET,
+        Robots::BoardPart::P_2
+      ) << Robots::BoardPart.new(
         [
           [8, 4, 0, 0, 0, 4, 2, 15],
           [8, 3, 8, 0, 2, 9, 0, 1],
@@ -156,9 +148,9 @@ module Robots
           { number: 38, color: :red },
           { number: 50, color: :green }
         ],
-        BoardPart::RED_CIRCLE,
-        BoardPart::P_3
-      ) << BoardPart.new(
+        Robots::BoardPart::RED_CIRCLE,
+        Robots::BoardPart::P_3
+      ) << Robots::BoardPart.new(
         [
           [15, 8, 0, 0, 0, 0, 0, 2],
           [1, 0, 0, 0, 0, 2, 12, 2],
@@ -176,8 +168,8 @@ module Robots
           { number: 40, color: :grey },
           { number: 50, color: :blue }
         ],
-        BoardPart::RED_STAR,
-        BoardPart::P_4
+        Robots::BoardPart::RED_STAR,
+        Robots::BoardPart::P_4
       )
       parts
     end
