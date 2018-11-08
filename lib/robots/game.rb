@@ -75,6 +75,12 @@ module Robots
       self.current_goal = goals[rand(0...goals.length)]
     end
 
+    # Checks if the given moves provide a solution to the
+    # current board state.
+    def is_solution?(moves)
+
+    end
+
     # Reset properties.
     def reset
       %i[cells goals robot_colors robot_positions completed_goals].each do |prop|
