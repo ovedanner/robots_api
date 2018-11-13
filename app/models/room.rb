@@ -1,8 +1,12 @@
 # Represents a room users can join.
 class Room < ApplicationRecord
   belongs_to :owner, class_name: 'User', foreign_key: :owner_id
-  has_many :room_users
-  has_many :members, class_name: 'User', through: :room_users, source: :user
+  has_many :room_users, dependent: :destroy
+  has_many :members,
+           class_name: 'User',
+           through: :room_users,
+           source: :user,
+           dependent: :destroy
 
   validates :owner, presence: true
   validates :board, json: true, allow_blank: true

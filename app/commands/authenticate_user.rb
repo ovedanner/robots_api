@@ -12,7 +12,7 @@ class AuthenticateUser
 
   def call()
     user = User.find_by_email(email)
-    return user if user&.authenticate(password)
+    return user if user&.password_digest && user.authenticate(password)
 
     errors.add :user_authentication, 'invalid credentials'
   end

@@ -89,7 +89,7 @@ module Api
     def room_params
       params.require(:data).permit(
         :type,
-        attributes: %i[name board]
+        attributes: %i[name open]
       )
     end
   end
