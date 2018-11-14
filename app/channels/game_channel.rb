@@ -5,7 +5,7 @@ class GameChannel < ApplicationCable::Channel
   def subscribed
     @room = Room.includes(:owner).find(params[:room])
     reject unless current_user.is_member_of_room?(@room)
-    stream_from "game_#{@room.id}"
+    stream_from "game:#{@room.id}"
   end
 
   # Whenever a user unsubscribes from the channel, he leaves the
@@ -15,9 +15,7 @@ class GameChannel < ApplicationCable::Channel
 
     # If the owner leaves the channel, delete the room and the game.
     if @room.owned_by?(current_user)
-      game = Game.find_by_room_id(@room.id)
-      game&.delete!
-      game&.destroy!
+      delete_existing_game
       @room.destroy
     end
   end
@@ -25,19 +23,13 @@ class GameChannel < ApplicationCable::Channel
   # The owner of the room can start a game.
   def start(message)
     if @room.owned_by?(current_user)
+      delete_existing_game
       game = Game.new(room_id: @room.id)
+
       if game.save
         game.start_game
-
-        data = message.merge(
-          cells: game.cells.value,
-          goals: game.goals.value,
-          robot_colors: game.robot_colors.value,
-          robot_positions: game.robot_positions.value,
-          current_goal: game.current_goal.value
-        )
-
-        ActionCable.server.broadcast "game_#{@room.id}", data
+        data = message.merge(game.board_and_game_data)
+        ActionCable.server.broadcast "game:#{@room.id}", data
       else
         logger.error("Could not create new game for room #{@room.id}")
       end
@@ -48,14 +40,33 @@ class GameChannel < ApplicationCable::Channel
   def has_solution_in(message)
     if message['nr_moves']
       game = Game.find_by_room_id(@room.id)
-      if game&.current_best_solution?(current_user, message['nr_moves'].to_i)
+
+      if game&.is_open_for_solution? &&
+         game&.current_best_solution?(current_user, message['nr_moves'].to_i)
         data = {
           action: message['action'],
           current_winner: game.current_winner.value,
           current_nr_moves: game.current_nr_moves.value
         }
-        ActionCable.server.broadcast "game_#{@room.id}", data
+
+        # Start the game timer if it hasn't been done already.
+        unless game.has_timer_started?
+          logger.info('Starting game timer!')
+          ScheduleGameThinkTimer.call(game)
+        end
+
+        # Inform subscribers that someone claims to have a solution.
+        ActionCable.server.broadcast "game:#{@room.id}", data
       end
     end
+  end
+
+  private
+
+  # Deletes any existing game in the room.
+  def delete_existing_game
+    game = Game.find_by_room_id(@room.id)
+    game&.delete!
+    game&.destroy!
   end
 end

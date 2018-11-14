@@ -13,6 +13,7 @@ gem 'simple_command'
 gem 'signet'
 gem 'google-api-client'
 gem 'redis-objects'
+gem 'concurrent-ruby', require: 'concurrent'
 
 # Use Puma as the app server
 gem 'puma', '~> 3.11'

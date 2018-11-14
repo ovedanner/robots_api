@@ -6,7 +6,7 @@ class ChatChannel < ApplicationCable::Channel
   def subscribed
     @room = Room.find(params[:room])
     reject unless current_user.is_member_of_room?(@room)
-    stream_from "chat_#{@room.id}"
+    stream_from "chat:#{@room.id}"
   end
 
   def unsubscribed
@@ -20,6 +20,6 @@ class ChatChannel < ApplicationCable::Channel
       author_id: current_user.id,
     )
 
-    ActionCable.server.broadcast "chat_#{@room.id}", data
+    ActionCable.server.broadcast "chat:#{@room.id}", data
   end
 end

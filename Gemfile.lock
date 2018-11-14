@@ -228,6 +228,7 @@ DEPENDENCIES
   bcrypt (~> 3.1.7)
   bootsnap (>= 1.1.0)
   byebug
+  concurrent-ruby
   dotenv-rails
   factory_bot_rails
   faker
