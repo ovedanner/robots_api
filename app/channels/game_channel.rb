@@ -46,6 +46,7 @@ class GameChannel < ApplicationCable::Channel
         data = {
           action: message['action'],
           current_winner: game.current_winner.value,
+          current_winner_id: game.current_winner_id.value,
           current_nr_moves: game.current_nr_moves.value
         }
 
@@ -57,6 +58,22 @@ class GameChannel < ApplicationCable::Channel
 
         # Inform subscribers that someone claims to have a solution.
         ActionCable.server.broadcast "game:#{@room.id}", data
+      end
+    end
+  end
+
+  # Actual moves are provided.
+  def solution_moves(message)
+    if message['moves']
+      # Make sure the user providing the moves is the current
+      # winner.
+      moves = message['moves'].map { |m| HashWithIndifferentAccess.new(m) }
+      logger.info(moves)
+      game = Game.find_by_room_id(@room.id)
+      if game&.is_current_winner?(current_user) && game&.is_open_for_moves?
+        if game.is_solution?(moves)
+          logger.info("User #{game.current_winner.value} wins!")
+        end
       end
     end
   end

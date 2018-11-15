@@ -27,28 +27,45 @@ module Robots
     end
 
     # Checks if the given goal is reached by performing the given
-    # moves on the given board with the given robot positions.
-    def self.is_solution?(board, robot_positions, goal, moves)
+    # moves on the board with the given robot positions.
+    def is_solution?(robot_positions, goal, moves)
       # Clone robot positions because we want to make modifications.
       r_positions = robot_positions.deep_dup
 
-      result = moves.all? do |move|
-        valid_move?(board, move, r_positions)
+      solution = true
+      moves.each do |move|
+        if valid_move?(move, r_positions)
+          old_pos = r_positions.find { |p| p[:robot] == move[:robot] }
+          old_pos[:position][:row] = move[:to][:row]
+          old_pos[:position][:column] = move[:to][:column]
+        else
+          solution = false
+          break
+        end
       end
 
-      if result
+      if solution
         # Check if the goal is reached.
+        goal_color = goal[:color]
+        goal_row = goal[:number] / cells.length
+        goal_column = goal[:number] % cells.length
+
+        actual = r_positions.find { |p| p[:robot] == goal_color }
+        actual_row = actual[:position][:row]
+        actual_column = actual[:position][:column]
+
+        return goal_row == actual_row && goal_column == actual_column
       end
+
+      false
     end
 
-    def self.valid_move?(board, move, robot_positions)
+    def valid_move?(move, robot_positions)
       valid = true
-      cells = board.cells
-      column_cells = board.column_cells
 
       robot = move[:robot]
       to = move[:to]
-      pos = robot_positions.shift { |p| p.color == robot }
+      pos = robot_positions.find { |p| p[:robot] == robot }
       return false unless pos
 
       from_row = pos[:position][:row]
@@ -68,10 +85,10 @@ module Robots
               valid &&= (cell & 2).zero?
             elsif idx > from_column && idx < to_column
               valid &&=
-                valid_path_cell?(cells, from_row, idx, :right, robot_positions)
+                valid_path_cell?(from_row, idx, :right, robot_positions)
             elsif idx == to_column
               valid &&=
-                valid_target_cell?(cells, from_row, idx, :right, robot_positions)
+                valid_target_cell?(from_row, idx, :right, robot_positions)
             end
           end
         else
@@ -81,10 +98,10 @@ module Robots
               valid &&= (cell & 8).zero?
             elsif idx > from_column && idx < to_column
               valid &&=
-                valid_path_cell?(cells, from_row, idx, :left, robot_positions)
+                valid_path_cell?(from_row, idx, :left, robot_positions)
             elsif idx == to_column
               valid &&=
-                valid_target_cell?(cells, from_row, idx, :left, robot_positions)
+                valid_target_cell?(from_row, idx, :left, robot_positions)
             end
           end
         end
@@ -97,10 +114,10 @@ module Robots
               valid &&= (cell & 4).zero?
             elsif idx > from_row && idx < to_row
               valid &&=
-                valid_path_cell?(cells, idx, from_column, :down, robot_positions)
+                valid_path_cell?(idx, from_column, :down, robot_positions)
             elsif idx == to_row
               valid &&=
-                valid_target_cell?(cells, idx, from_column, :down, robot_positions)
+                valid_target_cell?(idx, from_column, :down, robot_positions)
             end
           end
         else
@@ -110,10 +127,10 @@ module Robots
               valid &&= (cell & 1).zero?
             elsif idx < from_row && idx > to_row
               valid &&=
-                valid_path_cell?(cells, idx, from_column, :up, robot_positions)
+                valid_path_cell?(idx, from_column, :up, robot_positions)
             elsif idx == to_row
               valid &&=
-                valid_target_cell?(cells, idx, from_column, :up, robot_positions)
+                valid_target_cell?(idx, from_column, :up, robot_positions)
             end
           end
         end
@@ -123,8 +140,8 @@ module Robots
     end
 
     # Is the given cell a reachable path cell between the start and target cell?
-    def self.valid_path_cell?(cells, row, column, direction, robot_positions)
-      result = !self.contains_robot?(row, column, robot_positions)
+    def valid_path_cell?(row, column, direction, robot_positions)
+      result = !contains_robot?(row, column, robot_positions)
 
       case direction
       when :up, :down
@@ -139,14 +156,14 @@ module Robots
     end
 
     # Is there are robot at the given coordinates?
-    def self.contains_robot?(row, column, robot_positions)
+    def contains_robot?(row, column, robot_positions)
       robot_positions.any? do |p|
         p[:position][:row] == row && p[:position][:column] == column
       end
     end
 
     # Does the next cell in the given direction exist?
-    def self.next_cell_exists?(cells, row, column, direction)
+    def next_cell_exists?(row, column, direction)
       case direction
       when :up
         (row - 1) >= 0
@@ -162,25 +179,26 @@ module Robots
     end
 
     # Is the given cell a valid target cell coming from the given direction.
-    def self.valid_target_cell?(cells, row, column, direction, robot_positions)
+    def valid_target_cell?(row, column, direction, robot_positions)
       result = !contains_robot?(row, column, robot_positions)
+      walls = cells[row][column]
 
       case direction
       when :up
-        result &&= (cells[row][column] & 1).positive? ||
-                   (next_cell_exists?(cells, row, column, direction) &&
+        result &&= ((walls & 1).positive? && (walls & 4).zero?) ||
+                   (next_cell_exists?(row, column, direction) &&
                      contains_robot?(row - 1, column, robot_positions))
       when :down
-        result &&= (cells[row][column] & 4).positive? ||
-                   (next_cell_exists?(cells, row, column, direction) &&
+        result &&= ((walls & 4).positive? && (walls & 1).zero?) ||
+                   (next_cell_exists?(row, column, direction) &&
                      contains_robot?(row + 1, column, robot_positions))
       when :left
-        result &&= (cells[row][column] & 8).positive? ||
-                   (next_cell_exists?(cells, row, column, direction) &&
+        result &&= ((walls & 8).positive? && (walls & 2).zero?) ||
+                   (next_cell_exists?(row, column, direction) &&
                      contains_robot?(row, column - 1, robot_positions))
       when :right
-        result &&= (cells[row][column] & 2).positive? ||
-                   (next_cell_exists?(cells, row, column, direction) &&
+        result &&= ((walls & 2).positive? && (walls & 8).zero?) ||
+                   (next_cell_exists?(row, column, direction) &&
                      contains_robot?(row, column + 1, robot_positions))
       else
         result = false

@@ -5,11 +5,11 @@ class Game < ApplicationRecord
 
   # The number of seconds after which the current best solution
   # can be provided.
-  THINK_TIMEOUT = 5
+  THINK_TIMEOUT = 10
 
   # The number of seconds the provider of the best solution has
   # to provide the moves.
-  MOVE_TIMEOUT = 5
+  MOVE_TIMEOUT = 60
 
   include Redis::Objects
 
@@ -18,9 +18,9 @@ class Game < ApplicationRecord
   list :robot_colors, marshal: true
   list :robot_positions, marshal: true
   list :completed_goals
-  list :current_solution, marshal: true
   value :current_goal, marshal: true
   value :open_for_solution
+  value :open_for_moves
   value :current_nr_moves
   value :current_winner
   value :current_winner_id
@@ -93,6 +93,17 @@ class Game < ApplicationRecord
     result
   end
 
+  def is_open_for_moves?
+    result = false
+
+    solve_lock.lock do
+      result = (open_for_moves.to_i > 0)
+    end
+    logger.info("Open for moves: #{result}")
+
+    result
+  end
+
   # Indicates if there is a running timer.
   def has_timer_started?
     result = false
@@ -104,13 +115,29 @@ class Game < ApplicationRecord
     result
   end
 
+  # Is the given user the current winner?
+  def is_current_winner?(user)
+    result = false
+
+    solve_lock.lock do
+      logger.info("User: #{user.id}, current winner: #{current_winner_id.value.to_i}")
+      if user.id == current_winner_id.value.to_i
+        result = true
+      end
+    end
+
+    result
+  end
+
   # Marks the end of solutions for the current goal.
   def close_for_solution
     solve_lock.lock do
       self.open_for_solution = 0
+      self.open_for_moves = 1
       logger.info("Closing game_#{room_id} for solutions!")
       GameChannel.broadcast_to(room_id,
                                action: 'closed_for_solutions',
+                               current_winner_id: current_winner_id.value,
                                current_winner: current_winner.value)
     end
   end
@@ -119,20 +146,19 @@ class Game < ApplicationRecord
   # moves provided the right solution in time, he wins!
   def close_moves
     solve_lock.lock do
-      # There needs to be a solution of the same length.
-      if !current_solution&.empty? &&
-        current_solution.length == current_nr_moves.to_i
-        moves = current_solution.value
-        positions = robot_positions.value
-        goal = current_goal
-        board = Robots::Board.new(cells, goals, robot_colors)
-        if Robots::Board.is_solution?(board, positions, goal, moves)
-          finish_goal
-        end
-      else
-        logger.info("User #{current_winner.value} did not provide a solution in time!")
-      end
+      # No more moves can be provided.
+      self.open_for_moves = 0
+      GameChannel.broadcast_to(room_id,
+                               action: 'closed_for_moves')
     end
+  end
+
+  # Are the given moves a solution towards the current goal?
+  def is_solution?(moves)
+    positions = robot_positions.value
+    goal = current_goal
+    board = Robots::Board.new(cells, goals, robot_colors)
+    board.is_solution?(positions, goal, moves)
   end
 
   private
@@ -174,6 +200,7 @@ class Game < ApplicationRecord
 
     self.current_goal = nil
     self.open_for_solution = 1
+    self.open_for_moves = 0
     self.current_nr_moves = nil
     self.current_winner = nil
     self.current_winner_id = nil
