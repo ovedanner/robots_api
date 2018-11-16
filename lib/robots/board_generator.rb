@@ -87,7 +87,7 @@ module Robots
       end
 
       # Create a new board and return it.
-      Robots::Board.new(cells, goals, robot_colors.uniq)
+      Board.new(cells: cells, goals: goals, robot_colors: robot_colors.uniq)
     end
 
     # Initializes the static squares of the board.

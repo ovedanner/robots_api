@@ -9,7 +9,6 @@ class Room < ApplicationRecord
            dependent: :destroy
 
   validates :owner, presence: true
-  validates :board, json: true, allow_blank: true
   validates_inclusion_of :open, in: [true, false]
 
   # Whether or not the room is owned by the given user.

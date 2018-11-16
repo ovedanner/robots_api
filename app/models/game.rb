@@ -2,6 +2,31 @@
 # live in Redis.
 class Game < ApplicationRecord
   belongs_to :room
+  belongs_to :current_winner, class_name: 'User', optional: true
+  belongs_to :board
+
+  validates :room, presence: true
+  validates :board, presence: true
+  validates_associated :current_winner
+  validates :robot_positions, json: true, allow_blank: true
+  validates :completed_goals, json: true, allow_blank: true
+  validates :current_goal, json: true, allow_blank: true
+
+  def parsed_robot_positions
+    result = []
+    JSON.parse(robot_positions).each { |p| result << HashWithIndifferentAccess.new(p) }
+    result
+  end
+
+  def parsed_completed_goals
+    result = []
+    JSON.parse(completed_goals).each { |g| result << HashWithIndifferentAccess.new(g) }
+    result
+  end
+
+  def parsed_current_goal
+    HashWithIndifferentAccess.new(JSON.parse(current_goal))
+  end
 
   # The number of seconds after which the current best solution
   # can be provided.
@@ -11,53 +36,28 @@ class Game < ApplicationRecord
   # to provide the moves.
   MOVE_TIMEOUT = 60
 
+  # Used for locking the game while a solution is being checked
+  # or moves are being provided
   include Redis::Objects
-
-  list :cells, marshal: true
-  list :goals, marshal: true
-  list :robot_colors, marshal: true
-  list :robot_positions, marshal: true
-  list :completed_goals
-  value :current_goal, marshal: true
-  value :open_for_solution
-  value :open_for_moves
-  value :current_nr_moves
-  value :current_winner
-  value :current_winner_id
-  value :timer_started
   lock :solve
 
   # Starts the game for the given board by randomly initializing the robots
   # and setting a current goal.
-  def start_game(board = Robots::BoardGenerator.generate)
-    # Clear any existing values.
-    reset
-
-    board.cells.each do |row|
-      cells << row
-    end
-
-    board.goals.each do |goal|
-      goals << goal
-    end
-
-    board.robot_colors.each do |color|
-      robot_colors << color
-    end
-
-    initialize_robots
-    initialize_goal
+  def start_game!(board = Robots::BoardGenerator.generate)
+    update!(board: board,
+            robot_positions: board.get_random_robot_positions,
+            current_goal: board.get_random_goal)
   end
 
   # Formats current board and game data to be sent to
   # users.
   def board_and_game_data
     {
-      cells: cells.value,
-      goals: goals.value,
-      robot_colors: robot_colors.value,
-      robot_positions: robot_positions.value,
-      current_goal: current_goal.value
+      cells: board.parsed_cells,
+      goals: board.parsed_goals,
+      robot_colors: board.parsed_robot_colors,
+      robot_positions: parsed_robot_positions,
+      current_goal: parsed_current_goal
     }
   end
 
@@ -159,52 +159,5 @@ class Game < ApplicationRecord
     goal = current_goal
     board = Robots::Board.new(cells, goals, robot_colors)
     board.is_solution?(positions, goal, moves)
-  end
-
-  private
-
-  # Randomly initialize robots.
-  def initialize_robots
-    possible_positions = []
-    cells.each_with_index do |row, r_idx|
-      row.each_with_index do |_, c_idx|
-        possible_positions << [r_idx, c_idx] if cells[r_idx][c_idx] < 15
-      end
-    end
-
-    colors = robot_colors.slice(0, robot_colors.length)
-    nr_robots = colors.length
-    nr_robots.times do
-      pos = possible_positions.delete_at(rand(0...possible_positions.length))
-      robot_positions <<
-        {
-          color: colors.delete_at(rand(0...colors.length)),
-          position: {
-            row: pos[0],
-            column: pos[1]
-          }
-        }
-    end
-  end
-
-  # Randomly sets the current goal.
-  def initialize_goal
-    self.current_goal = goals[rand(0...goals.length)]
-  end
-
-  # Reset properties.
-  def reset
-    %i[cells goals robot_colors robot_positions completed_goals].each do |prop|
-      send(prop).send(:clear)
-    end
-
-    self.current_goal = nil
-    self.open_for_solution = 1
-    self.open_for_moves = 0
-    self.current_nr_moves = nil
-    self.current_winner = nil
-    self.current_winner_id = nil
-    self.current_nr_moves = -1
-    self.timer_started = 0
   end
 end

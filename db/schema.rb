@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_13_135734) do
+ActiveRecord::Schema.define(version: 2018_11_16_142019) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -25,10 +25,28 @@ ActiveRecord::Schema.define(version: 2018_11_13_135734) do
     t.index ["user_id"], name: "index_access_tokens_on_user_id"
   end
 
+  create_table "boards", force: :cascade do |t|
+    t.json "cells", null: false
+    t.json "goals", null: false
+    t.json "robot_colors", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "games", force: :cascade do |t|
     t.bigint "room_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.json "robot_positions"
+    t.json "completed_goals"
+    t.json "current_goal"
+    t.boolean "open_for_solution", default: false
+    t.boolean "open_for_moves", default: false
+    t.integer "current_nr_moves"
+    t.bigint "current_winner_id"
+    t.bigint "board_id"
+    t.index ["board_id"], name: "index_games_on_board_id"
+    t.index ["current_winner_id"], name: "index_games_on_current_winner_id"
     t.index ["room_id"], name: "index_games_on_room_id"
   end
 
@@ -54,5 +72,7 @@ ActiveRecord::Schema.define(version: 2018_11_13_135734) do
     t.string "password_digest"
   end
 
+  add_foreign_key "games", "boards"
   add_foreign_key "games", "rooms"
+  add_foreign_key "games", "users", column: "current_winner_id"
 end

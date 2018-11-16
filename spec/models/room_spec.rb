@@ -14,20 +14,6 @@ RSpec.describe Room, type: :model do
     it { is_expected.to have_many(:members) }
   end
 
-  describe '#board' do
-    let(:valid_board) do
-      <<~HEREDOC
-        {"cells":[[1,1,1],[2,2,2],[3,3,3]],"goals":[{"number":2,"color":"red"}],"robot_colors":["red"]}
-      HEREDOC
-    end
-
-    it { is_expected.to allow_value(nil).for(:board) }
-    it { is_expected.not_to allow_value('invalid JSON').for(:board) }
-    it { is_expected.not_to allow_value(4).for(:board) }
-
-    it { is_expected.to allow_value(valid_board).for(:board) }
-  end
-
   describe '#open' do
     it { is_expected.to allow_value(true).for(:open) }
     it { is_expected.to allow_value(false).for(:open) }

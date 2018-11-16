@@ -13,7 +13,7 @@ RSpec.describe Robots::BoardGenerator do
         expect(row.length).to eq(16)
       end
       expect(goals.length).to eq(17)
-      expect(robot_colors).to match_array(%i[red green yellow blue grey])
+      expect(robot_colors).to match_array(%w[red green yellow blue grey])
     end
   end
 end

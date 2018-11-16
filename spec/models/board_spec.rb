@@ -1,17 +1,59 @@
 require 'rails_helper'
 
-RSpec.describe Robots::Board do
+RSpec.describe Board, type: :model do
+  describe '#cells' do
+    let(:valid_cells) do
+      <<~HEREDOC
+        [[1,1,1],[2,2,2],[3,3,3]]
+      HEREDOC
+    end
+
+    it { is_expected.to allow_value(nil).for(:cells) }
+    it { is_expected.not_to allow_value('invalid JSON').for(:cells) }
+    it { is_expected.not_to allow_value(4).for(:cells) }
+
+    it { is_expected.to allow_value(valid_cells).for(:cells) }
+  end
+
+  describe '#goals' do
+    let(:valid_goals) do
+      <<~HEREDOC
+        [{"number":2,"color":"red"}]
+      HEREDOC
+    end
+
+    it { is_expected.to allow_value(nil).for(:goals) }
+    it { is_expected.not_to allow_value('invalid JSON').for(:goals) }
+    it { is_expected.not_to allow_value(4).for(:goals) }
+
+    it { is_expected.to allow_value(valid_goals).for(:goals) }
+  end
+
+  describe '#robot_colors' do
+    let(:valid_robot_colors) do
+      <<~HEREDOC
+        ["red", "blue"]
+      HEREDOC
+    end
+
+    it { is_expected.to allow_value(nil).for(:robot_colors) }
+    it { is_expected.not_to allow_value('invalid JSON').for(:robot_colors) }
+    it { is_expected.not_to allow_value(4).for(:robot_colors) }
+
+    it { is_expected.to allow_value(valid_robot_colors).for(:robot_colors) }
+  end
+
   describe '#column_cells' do
     let(:board) do
-      Robots::Board.new(
-        [
-          [1, 2, 3, 4],
-          [5, 6, 7, 8],
-          [9, 10, 11, 12],
-          [13, 14, 15, 0]
-        ], [
-          { number: 2, color: :red }
-        ], [:red]
+      FactoryBot.create('board',
+                        cells: [
+                          [1, 2, 3, 4],
+                          [5, 6, 7, 8],
+                          [9, 10, 11, 12],
+                          [13, 14, 15, 0]
+                        ].to_json, goals: [
+                          { number: 2, color: :red }
+                        ].to_json, robot_colors: [:red].to_json
       )
     end
 
@@ -30,16 +72,16 @@ RSpec.describe Robots::Board do
 
   describe '#valid_move?' do
     let(:board) do
-      Robots::Board.new(
-        [
-          [5, 1, 1, 3],
-          [8, 0, 0, 2],
-          [8, 0, 0, 2],
-          [12, 4, 4, 14]
-        ], [
-          { number: 2, color: :red },
-          { number: 6, color: :blue }
-        ], %i[red blue]
+      FactoryBot.create('board',
+                        cells: [
+                          [5, 1, 1, 3],
+                          [8, 0, 0, 2],
+                          [8, 0, 0, 2],
+                          [12, 4, 4, 14]
+                        ].to_json, goals: [
+                          { number: 2, color: :red },
+                          { number: 6, color: :blue }
+                        ].to_json, robot_colors: %i[red blue].to_json
       )
     end
 
@@ -189,16 +231,16 @@ RSpec.describe Robots::Board do
 
   describe '#is_solution?' do
     let(:board) do
-      Robots::Board.new(
-        [
-          [5, 1, 1, 3],
-          [8, 0, 0, 2],
-          [8, 0, 0, 2],
-          [12, 4, 4, 6]
-        ], [
-          { number: 2, color: :red },
-          { number: 6, color: :blue }
-        ], %i[red blue]
+      FactoryBot.create('board',
+                        cells: [
+                          [5, 1, 1, 3],
+                          [8, 0, 0, 2],
+                          [8, 0, 0, 2],
+                          [12, 4, 4, 6]
+                        ].to_json, goals: [
+                          { number: 2, color: :red },
+                          { number: 6, color: :blue }
+                        ].to_json, robot_colors: %i[red blue].to_json
       )
     end
 
@@ -218,7 +260,7 @@ RSpec.describe Robots::Board do
       end
 
       it 'returns true' do
-        goal = board.goals[0]
+        goal = board.parsed_goals[0]
         result = board.is_solution?(robot_positions, goal, moves)
         expect(result).to eq(true)
       end
