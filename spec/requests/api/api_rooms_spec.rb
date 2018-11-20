@@ -41,10 +41,7 @@ RSpec.describe 'Api::Rooms', type: :request do
         data: {
           type: 'rooms',
           attributes: {
-            board: <<~HEREDOC
-              {"cells":[[1,1],[2,2]],"goals":[{"number":2,"color":"red"}],
-                "robot_colors":["red"]}
-            HEREDOC
+            name: 'Derpy'
           }
         }
       }
@@ -57,7 +54,7 @@ RSpec.describe 'Api::Rooms', type: :request do
               headers: auth_header(user.access_tokens.first.token)
         assert_success
         room = Room.find(existing_room.id)
-        expect(room.board).to eq(room_data[:data][:attributes][:board])
+        expect(room.name).to eq(room_data[:data][:attributes][:name])
       end
     end
 

@@ -4,7 +4,7 @@ module Robots
     # Generates a new board.
     def self.generate
       # Get all board parts.
-      all_board_parts = get_board_parts
+      all_board_parts = board_parts
 
       # Randomly select four of them. TODO: make sure only one of each part type exists.
       parts = all_board_parts
@@ -87,11 +87,14 @@ module Robots
       end
 
       # Create a new board and return it.
-      Board.new(cells: cells, goals: goals, robot_colors: robot_colors.uniq)
+      Board.new(
+        cells: cells.to_json,
+        goals: goals.to_json,
+        robot_colors: robot_colors.uniq.to_json)
     end
 
     # Initializes the static squares of the board.
-    def self.get_board_parts
+    def self.board_parts
       parts = []
       parts << Robots::BoardPart.new(
         [
@@ -105,10 +108,10 @@ module Robots
           [8, 0, 0, 0, 0, 0, 2, 15]
         ],
         [
-          { number: 21, color: :blue },
-          { number: 34, color: :green },
-          { number: 47, color: :red },
-          { number: 49, color: :yellow }
+          { number: 21, color: Board::BLUE },
+          { number: 34, color: Board::GREEN },
+          { number: 47, color: Board::RED },
+          { number: 49, color: Board::YELLOW }
         ],
         Robots::BoardPart::RED_GEAR,
         Robots::BoardPart::P_1
@@ -124,10 +127,10 @@ module Robots
           [15, 8, 0, 0, 0, 0, 0, 2]
         ],
         [
-          { number: 19, color: :red },
-          { number: 29, color: :yellow },
-          { number: 34, color: :green },
-          { number: 44, color: :blue }
+          { number: 19, color: Board::RED },
+          { number: 29, color: Board::YELLOW },
+          { number: 34, color: Board::GREEN },
+          { number: 44, color: Board::BLUE }
         ],
         Robots::BoardPart::RED_PLANET,
         Robots::BoardPart::P_2
@@ -143,10 +146,10 @@ module Robots
           [12, 4, 5, 4, 4, 6, 12, 4]
         ],
         [
-          { number: 9, color: :yellow },
-          { number: 13, color: :blue },
-          { number: 38, color: :red },
-          { number: 50, color: :green }
+          { number: 9, color: Board::YELLOW },
+          { number: 13, color: Board::BLUE },
+          { number: 38, color: Board::RED },
+          { number: 50, color: Board::GREEN }
         ],
         Robots::BoardPart::RED_CIRCLE,
         Robots::BoardPart::P_3
@@ -162,11 +165,11 @@ module Robots
           [4, 4, 4, 4, 6, 12, 4, 6]
         ],
         [
-          { number: 14, color: :yellow },
-          { number: 17, color: :green },
-          { number: 28, color: :red },
-          { number: 40, color: :grey },
-          { number: 50, color: :blue }
+          { number: 14, color: Board::YELLOW },
+          { number: 17, color: Board::GREEN },
+          { number: 28, color: Board::RED },
+          { number: 40, color: Board::GREY },
+          { number: 50, color: Board::BLUE }
         ],
         Robots::BoardPart::RED_STAR,
         Robots::BoardPart::P_4

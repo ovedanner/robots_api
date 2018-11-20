@@ -41,12 +41,13 @@ class Game < ApplicationRecord
   include Redis::Objects
   lock :solve
 
-  # Starts the game for the given board by randomly initializing the robots
+  # Starts the game by randomly initializing the robots
   # and setting a current goal.
-  def start_game!(board = Robots::BoardGenerator.generate)
-    update!(board: board,
-            robot_positions: board.get_random_robot_positions,
-            current_goal: board.get_random_goal)
+  def start_game!
+    update!(
+      current_nr_moves: -1,
+      robot_positions: board.get_random_robot_positions,
+      current_goal: board.get_random_goal)
   end
 
   # Formats current board and game data to be sent to
@@ -65,99 +66,42 @@ class Game < ApplicationRecord
   # have a solution in the given number of moves.
   # Returns whether or not that is the best one so
   # far.
-  def current_best_solution?(user, nr_moves)
-    result = false
-
-    solve_lock.lock do
-      current = current_nr_moves.value.to_i
-      if current == -1 || current > nr_moves
-        self.current_nr_moves = nr_moves
-        self.current_winner_id = user.id
-        self.current_winner = user.firstname
-        result = true
-      end
-    end
-
-    result
-  end
-
-  # Is the current goal open for a solution? In other words, has
-  # the think timer expired yet?
-  def is_open_for_solution?
-    result = false
-
-    solve_lock.lock do
-      result = (open_for_solution.to_i > 0)
-    end
-
-    result
-  end
-
-  def is_open_for_moves?
-    result = false
-
-    solve_lock.lock do
-      result = (open_for_moves.to_i > 0)
-    end
-    logger.info("Open for moves: #{result}")
-
-    result
-  end
-
-  # Indicates if there is a running timer.
-  def has_timer_started?
-    result = false
-
-    solve_lock.lock do
-      result = (timer_started.to_i > 0)
-    end
-
-    result
+  def current_best_solution?(nr_moves)
+    current_nr_moves == -1 || current_nr_moves > nr_moves
   end
 
   # Is the given user the current winner?
-  def is_current_winner?(user)
-    result = false
-
-    solve_lock.lock do
-      logger.info("User: #{user.id}, current winner: #{current_winner_id.value.to_i}")
-      if user.id == current_winner_id.value.to_i
-        result = true
-      end
-    end
-
-    result
+  def current_winner?(user)
+    user.id == current_winner.id
   end
 
   # Marks the end of solutions for the current goal.
-  def close_for_solution
-    solve_lock.lock do
-      self.open_for_solution = 0
-      self.open_for_moves = 1
-      logger.info("Closing game_#{room_id} for solutions!")
-      GameChannel.broadcast_to(room_id,
-                               action: 'closed_for_solutions',
-                               current_winner_id: current_winner_id.value,
-                               current_winner: current_winner.value)
-    end
+  def close_for_solution!
+    update!(open_for_solution: false, open_for_moves: true)
+    GameChannel.broadcast_to(room_id,
+                             action: 'closed_for_solutions',
+                             current_winner_id: current_winner.id,
+                             current_winner: current_winner.firstname)
   end
 
   # Marks the current goal as finished. If the user with the least number of
   # moves provided the right solution in time, he wins!
-  def close_moves
-    solve_lock.lock do
-      # No more moves can be provided.
-      self.open_for_moves = 0
-      GameChannel.broadcast_to(room_id,
-                               action: 'closed_for_moves')
-    end
+  def close_for_moves!
+    # No more moves can be provided.
+    update!(open_for_moves: false)
+    GameChannel.broadcast_to(room_id,
+                             action: 'closed_for_moves')
   end
 
   # Are the given moves a solution towards the current goal?
-  def is_solution?(moves)
-    positions = robot_positions.value
-    goal = current_goal
-    board = Robots::Board.new(cells, goals, robot_colors)
-    board.is_solution?(positions, goal, moves)
+  def solution?(moves)
+    board.solution?(parsed_robot_positions, parsed_current_goal, moves)
+  end
+
+  # Evaluates the given block using a mutex on the game.
+  def evaluate
+    solve_lock.lock do
+      yield
+    end
   end
 end

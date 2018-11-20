@@ -45,15 +45,16 @@ RSpec.describe Board, type: :model do
 
   describe '#column_cells' do
     let(:board) do
-      FactoryBot.create('board',
-                        cells: [
-                          [1, 2, 3, 4],
-                          [5, 6, 7, 8],
-                          [9, 10, 11, 12],
-                          [13, 14, 15, 0]
-                        ].to_json, goals: [
-                          { number: 2, color: :red }
-                        ].to_json, robot_colors: [:red].to_json
+      FactoryBot.create(
+        'board',
+        cells: [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12],
+          [13, 14, 15, 0]
+        ].to_json, goals: [
+          { number: 2, color: Board::RED }
+        ].to_json, robot_colors: [Board::RED].to_json
       )
     end
 
@@ -72,30 +73,31 @@ RSpec.describe Board, type: :model do
 
   describe '#valid_move?' do
     let(:board) do
-      FactoryBot.create('board',
-                        cells: [
-                          [5, 1, 1, 3],
-                          [8, 0, 0, 2],
-                          [8, 0, 0, 2],
-                          [12, 4, 4, 14]
-                        ].to_json, goals: [
-                          { number: 2, color: :red },
-                          { number: 6, color: :blue }
-                        ].to_json, robot_colors: %i[red blue].to_json
+      FactoryBot.create(
+        'board',
+        cells: [
+          [5, 1, 1, 3],
+          [8, 0, 0, 2],
+          [8, 0, 0, 2],
+          [12, 4, 4, 14]
+        ].to_json, goals: [
+          { number: 2, color: Board::RED },
+          { number: 6, color: Board::BLUE }
+        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
       )
     end
 
     let(:robot_positions) do
       [
-        {robot: :red, position: {row: 1, column: 1 } },
-        {robot: :blue, position: {row: 3, column: 1 } }
+        {robot: Board::RED, position: {row: 1, column: 1 } },
+        {robot: Board::BLUE, position: {row: 3, column: 1 } }
       ]
     end
 
     context 'when valid up move' do
       let(:move) do
         {
-          robot: :red,
+          robot: Board::RED,
           to: {
             row: 0,
             column: 1
@@ -112,7 +114,7 @@ RSpec.describe Board, type: :model do
     context 'when diagonal up move' do
       let(:move) do
         {
-          robot: :red,
+          robot: Board::RED,
           to: {
             row: 0,
             column: 0
@@ -129,7 +131,7 @@ RSpec.describe Board, type: :model do
     context 'when valid down move' do
       let(:move) do
         {
-          robot: :red,
+          robot: Board::RED,
           to: {
             row: 2,
             column: 1
@@ -146,7 +148,7 @@ RSpec.describe Board, type: :model do
     context 'when diagonal down move' do
       let(:move) do
         {
-          robot: :red,
+          robot: Board::RED,
           to: {
             row: 2,
             column: 2
@@ -163,7 +165,7 @@ RSpec.describe Board, type: :model do
     context 'when down to robot move' do
       let(:move) do
         {
-          robot: :red,
+          robot: Board::RED,
           to: {
             row: 3,
             column: 1
@@ -180,7 +182,7 @@ RSpec.describe Board, type: :model do
     context 'when valid left move' do
       let(:move) do
         {
-          robot: :red,
+          robot: Board::RED,
           to: {
             row: 1,
             column: 0
@@ -197,7 +199,7 @@ RSpec.describe Board, type: :model do
     context 'when valid right move' do
       let(:move) do
         {
-          robot: :red,
+          robot: Board::RED,
           to: {
             row: 1,
             column: 3
@@ -214,7 +216,7 @@ RSpec.describe Board, type: :model do
     context 'when invalid right move through wall' do
       let(:move) do
         {
-          robot: :blue,
+          robot: Board::BLUE,
           to: {
             row: 3,
             column: 3
@@ -229,39 +231,40 @@ RSpec.describe Board, type: :model do
     end
   end
 
-  describe '#is_solution?' do
+  describe '#solution?' do
     let(:board) do
-      FactoryBot.create('board',
-                        cells: [
-                          [5, 1, 1, 3],
-                          [8, 0, 0, 2],
-                          [8, 0, 0, 2],
-                          [12, 4, 4, 6]
-                        ].to_json, goals: [
-                          { number: 2, color: :red },
-                          { number: 6, color: :blue }
-                        ].to_json, robot_colors: %i[red blue].to_json
+      FactoryBot.create(
+        'board',
+        cells: [
+          [5, 1, 1, 3],
+          [8, 0, 0, 2],
+          [8, 0, 0, 2],
+          [12, 4, 4, 6]
+        ].to_json, goals: [
+          { number: 2, color: Board::RED },
+          { number: 6, color: Board::BLUE }
+        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
       )
     end
 
     let(:robot_positions) do
       [
-        { robot: :red, position: { row: 3, column: 0 } },
-        { robot: :blue, position: { row: 3, column: 3 } }
+        { robot: Board::RED, position: { row: 3, column: 0 } },
+        { robot: Board::BLUE, position: { row: 3, column: 3 } }
       ]
     end
 
     context 'when valid moves' do
       let(:moves) do
         [
-          { robot: :red, to: { row: 3, column: 2 } },
-          { robot: :red, to: { row: 0, column: 2 } }
+          { robot: Board::RED, to: { row: 3, column: 2 } },
+          { robot: Board::RED, to: { row: 0, column: 2 } }
         ]
       end
 
       it 'returns true' do
         goal = board.parsed_goals[0]
-        result = board.is_solution?(robot_positions, goal, moves)
+        result = board.solution?(robot_positions, goal, moves)
         expect(result).to eq(true)
       end
     end

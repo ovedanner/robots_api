@@ -1,4 +1,10 @@
 class Board < ApplicationRecord
+  RED = 'red'.freeze
+  BLUE = 'blue'.freeze
+  GREEN = 'green'.freeze
+  YELLOW = 'yellow'.freeze
+  GREY = 'grey'.freeze
+
   validates :cells, json: true, allow_blank: false
   validates :goals, json: true, allow_blank: false
   validates :robot_colors, json: true, allow_blank: false
@@ -14,9 +20,7 @@ class Board < ApplicationRecord
   end
 
   def parsed_robot_colors
-    result = []
-    JSON.parse(robot_colors).each { |c| result << HashWithIndifferentAccess.new(c) }
-    result
+    JSON.parse(robot_colors)
   end
 
   # Returns the cells in columns instead of rows.
@@ -68,7 +72,7 @@ class Board < ApplicationRecord
 
   # Checks if the given goal is reached by performing the given
   # moves on the board with the given robot positions.
-  def is_solution?(robot_positions, goal, moves)
+  def solution?(robot_positions, goal, moves)
     # Clone robot positions because we want to make modifications.
     r_positions = robot_positions.deep_dup
 
@@ -90,7 +94,7 @@ class Board < ApplicationRecord
       goal_row = goal[:number] / cells.length
       goal_column = goal[:number] % cells.length
 
-      actual = r_positions.find { |p| p[:robot] == goal_color.to_sym }
+      actual = r_positions.find { |p| p[:robot] == goal_color }
       actual_row = actual[:position][:row]
       actual_column = actual[:position][:column]
 

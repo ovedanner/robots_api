@@ -4,9 +4,9 @@ RSpec.describe Robots::BoardGenerator do
   describe 'generate' do
     it 'generates a proper new board' do
       board = described_class.generate
-      cells = board.cells
-      goals = board.goals
-      robot_colors = board.robot_colors
+      cells = board.parsed_cells
+      goals = board.parsed_goals
+      robot_colors = board.parsed_robot_colors
 
       expect(cells.length).to eq(16)
       cells.each do |row|
