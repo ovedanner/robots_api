@@ -71,6 +71,66 @@ RSpec.describe Board, type: :model do
     end
   end
 
+  describe '#random_goal' do
+    let(:board) do
+      FactoryBot.create(
+        'board',
+        cells: [
+          [5, 1, 1, 3],
+          [8, 0, 0, 2],
+          [8, 0, 0, 2],
+          [12, 4, 4, 14]
+        ].to_json, goals: [
+        { number: 2, color: Board::RED },
+        { number: 6, color: Board::BLUE }
+      ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+      )
+    end
+
+    context 'when called' do
+      it 'returns a random goal' do
+        goal = board.random_goal
+        expect(goal[:number]).to be_in([2, 6])
+        expect(goal[:color]).to be_in([Board::RED, Board::BLUE])
+      end
+    end
+  end
+
+  describe '#random_goal_not_in' do
+    let(:board) do
+      FactoryBot.create(
+        'board',
+        cells: [
+          [5, 1, 1, 3],
+          [8, 0, 0, 2],
+          [8, 0, 0, 2],
+          [12, 4, 4, 14]
+        ].to_json, goals: [
+        { number: 2, color: Board::RED },
+        { number: 6, color: Board::BLUE }
+      ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+      )
+    end
+
+    context 'when called with a goal' do
+      it 'returns another goal' do
+        goal = board.random_goal_not_in([{ number: 2, color: Board::RED }])
+        expect(goal[:number]).to be(6)
+        expect(goal[:color]).to eq(Board::BLUE)
+      end
+    end
+
+    context 'when called with all goals' do
+      it 'returns nothing' do
+        given_goals = [
+          { number: 2, color: Board::RED },
+          { number: 6, color: Board::BLUE }
+        ]
+        expect(board.random_goal_not_in(given_goals)).to be_falsey
+      end
+    end
+  end
+
   describe '#valid_move?' do
     let(:board) do
       FactoryBot.create(

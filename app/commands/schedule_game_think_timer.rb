@@ -15,7 +15,7 @@ class ScheduleGameThinkTimer
     Rails.application.executor.wrap do
       Concurrent::ScheduledTask.execute(Game::THINK_TIMEOUT) do
         @game.solve_lock.lock do
-          @game.close_for_solution
+          @game.close_for_solution!
           schedule_move_timeout
         end
       end
@@ -25,7 +25,7 @@ class ScheduleGameThinkTimer
   def schedule_move_timeout
     Rails.application.executor.wrap do
       Concurrent::ScheduledTask.execute(Game::MOVE_TIMEOUT) do
-        @game.close_moves
+        @game.close_for_moves!
       end
     end
   end

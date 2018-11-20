@@ -24,9 +24,22 @@ class GameChannel < ApplicationCable::Channel
   def start(message)
     if @room.owned_by?(current_user)
       delete_existing_game
-      board = Robots::BoardGenerator.generate
+      # board = Robots::BoardGenerator.generate
+      board = Board.new(cells: [
+        [9, 1, 1, 3],
+        [8, 0, 0, 2],
+        [8, 0, 0, 2],
+        [12, 4, 4, 6]
+      ].to_json, goals: [
+        { number: 0, color: Board::RED },
+        { number: 15, color: Board::BLUE }
+      ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json)
       board.save
-      game = Game.new(room: @room, board: board)
+      game = Game.new(
+        room: @room,
+        open_for_solution: true,
+        open_for_moves: false,
+        board: board)
 
       if game.save
         game.start_game!
@@ -43,20 +56,26 @@ class GameChannel < ApplicationCable::Channel
     if message['nr_moves']
       nr_moves = message['nr_moves'].to_i
       game = Game.find_by_room_id(@room.id)
+      logger.info("Found game #{game.id}")
 
       game&.evaluate do
+        logger.info("Open for solution #{game.open_for_solution?}")
+        logger.info("Current best solution #{game.current_best_solution?(nr_moves)}")
         if game.open_for_solution? &&
            game.current_best_solution?(nr_moves)
 
           data = {
             action: message['action'],
-            current_winner: game.current_winner.firstname,
-            current_winner_id: game.current_winner.id,
+            current_winner: current_user.firstname,
+            current_winner_id: current_user.id,
             current_nr_moves: nr_moves
           }
 
           # Start the game timer if it hasn't been done already.
-          attributes = {current_nr_moves: nr_moves, current_winner: current_user}
+          attributes = {
+            current_nr_moves: nr_moves,
+            current_winner: current_user,
+            open_for_moves: true }
           unless game.timer_started?
             ScheduleGameThinkTimer.call(game)
             attributes[:timer_started] = true
@@ -80,9 +99,13 @@ class GameChannel < ApplicationCable::Channel
       game = Game.find_by_room_id(@room.id)
 
       game&.evaluate do
+        logger.info("Open for moves: #{game.open_for_moves?}")
+        logger.info("Current winner: #{game.current_winner?(current_user)}")
         if game.current_winner?(current_user) && game.open_for_moves?
+          logger.info("Solution: #{game.solution?(moves)}")
           if game.solution?(moves)
-            logger.info("User #{game.current_winner.value} wins!")
+            logger.info("User #{game.current_winner.firstname} wins!")
+            game.close_for_moves!
           end
         end
       end

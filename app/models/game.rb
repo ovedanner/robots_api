@@ -46,8 +46,8 @@ class Game < ApplicationRecord
   def start_game!
     update!(
       current_nr_moves: -1,
-      robot_positions: board.get_random_robot_positions,
-      current_goal: board.get_random_goal)
+      robot_positions: board.get_random_robot_positions.to_json,
+      current_goal: board.random_goal.to_json)
   end
 
   # Formats current board and game data to be sent to
@@ -89,13 +89,36 @@ class Game < ApplicationRecord
   def close_for_moves!
     # No more moves can be provided.
     update!(open_for_moves: false)
-    GameChannel.broadcast_to(room_id,
+    GameChannel.broadcast_to(room.id,
                              action: 'closed_for_moves')
   end
 
   # Are the given moves a solution towards the current goal?
   def solution?(moves)
     board.solution?(parsed_robot_positions, parsed_current_goal, moves)
+  end
+
+  # Called when the given user won the current goal.
+  def goal_won_by!(user)
+    completed = parsed_completed_goals
+    completed << parsed_current_goal
+
+    new_goal = board.random_goal_not_in(completed)
+    if new_goal
+      update!(
+        current_goal: new_goal,
+        open_for_solution: true,
+        open_for_moves: false,
+        timer_started: false,
+        current_winner: nil
+      )
+
+      GameChannel.broadcast_to(
+        room.id,
+        action: 'new_goal',
+        goal: new_goal
+      )
+    end
   end
 
   # Evaluates the given block using a mutex on the game.

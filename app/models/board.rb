@@ -62,12 +62,26 @@ class Board < ApplicationRecord
         }
     end
 
-    actual_positions.to_json
+    actual_positions
   end
 
-  # Returns randomly initialized goals.
-  def get_random_goal
-    parsed_goals[rand(0...parsed_goals.length)].to_json
+  # Returns a random goal from the board.
+  def random_goal
+    parsed_goals[rand(0...parsed_goals.length)]
+  end
+
+  # Returns a random goal not in the given goals
+  def random_goal_not_in(goals)
+    remaining = []
+    parsed_goals.each do |parsed_goal|
+      unless goals.any? { |g| g[:number] == parsed_goal[:number] && g[:color] == parsed_goal[:color]}
+        remaining << parsed_goal
+      end
+    end
+
+    return if remaining.empty?
+
+    remaining[rand(0...remaining.length)]
   end
 
   # Checks if the given goal is reached by performing the given
@@ -79,7 +93,7 @@ class Board < ApplicationRecord
     solution = true
     moves.each do |move|
       if valid_move?(move, r_positions)
-        old_pos = r_positions.find { |p| p[:robot] == move[:robot] }
+        old_pos = r_positions.find { |p| p[:color] == move[:robot] }
         old_pos[:position][:row] = move[:to][:row]
         old_pos[:position][:column] = move[:to][:column]
       else
@@ -91,10 +105,10 @@ class Board < ApplicationRecord
     if solution
       # Check if the goal is reached.
       goal_color = goal[:color]
-      goal_row = goal[:number] / cells.length
-      goal_column = goal[:number] % cells.length
+      goal_row = goal[:number] / parsed_cells.length
+      goal_column = goal[:number] % parsed_cells.length
 
-      actual = r_positions.find { |p| p[:robot] == goal_color }
+      actual = r_positions.find { |p| p[:color] == goal_color }
       actual_row = actual[:position][:row]
       actual_column = actual[:position][:column]
 
@@ -109,7 +123,7 @@ class Board < ApplicationRecord
 
     robot = move[:robot]
     to = move[:to]
-    pos = robot_positions.find { |p| p[:robot] == robot }
+    pos = robot_positions.find { |p| p[:color] == robot }
     return false unless pos
 
     from_row = pos[:position][:row]
