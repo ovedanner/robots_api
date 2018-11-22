@@ -5,6 +5,3 @@
 #
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
-user = User.create!(email: 'test@gmail.com', firstname: 'Test', password: 'Test1234')
-AccessToken.create!(user: user)
-Room.create!(name: 'New room', owner: user, open: true)

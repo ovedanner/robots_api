@@ -45,6 +45,7 @@ class Game < ApplicationRecord
   # and setting a current goal.
   def start_game!
     update!(
+      completed_goals: [].to_json,
       current_nr_moves: -1,
       robot_positions: board.get_random_robot_positions.to_json,
       current_goal: board.random_goal.to_json)
@@ -99,25 +100,47 @@ class Game < ApplicationRecord
   end
 
   # Called when the given user won the current goal.
-  def goal_won_by!(user)
+  def next_goal!()
     completed = parsed_completed_goals
     completed << parsed_current_goal
 
     new_goal = board.random_goal_not_in(completed)
     if new_goal
+      # Get the game ready for the next round.
       update!(
-        current_goal: new_goal,
+        current_goal: new_goal.to_json,
+        completed_goals: completed.to_json,
         open_for_solution: true,
         open_for_moves: false,
         timer_started: false,
-        current_winner: nil
+        current_winner: nil,
+        current_nr_moves: -1
       )
 
-      GameChannel.broadcast_to(
-        room.id,
-        action: 'new_goal',
-        goal: new_goal
-      )
+      new_goal
+    else
+      false
+    end
+  end
+
+  # Start the solution timer.
+  def start_solution_timer(moves_timer)
+    Rails.application.executor.wrap do
+      Concurrent::ScheduledTask.execute(Game::THINK_TIMEOUT) do
+        evaluate do
+          close_for_solution!
+          moves_timer.execute
+        end
+      end
+    end
+  end
+
+  # Get the moves timer.
+  def moves_timer
+    Concurrent::ScheduledTask.new(Game::MOVE_TIMEOUT) do
+      evaluate do
+        close_for_moves!
+      end
     end
   end
 
