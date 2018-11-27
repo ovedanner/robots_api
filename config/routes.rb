@@ -11,4 +11,9 @@ Rails.application.routes.draw do
     get '/boards/random', to: 'boards#random'
     mount ActionCable.server => '/cable'
   end
+
+  # Catch-all route, will get the appropriate
+  # index.html from Redis for the frontend.
+  root 'frontend#index'
+  get '*path', to: 'frontend#index'
 end

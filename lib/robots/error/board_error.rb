@@ -1,4 +1,4 @@
-module Board
+module Robots
   # Simple board error class.
   class BoardError < StandardError
 
