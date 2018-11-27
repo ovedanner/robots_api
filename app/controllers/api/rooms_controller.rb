@@ -4,16 +4,16 @@ module Api
     # Retrieve all rooms
     def index
       @rooms = Room.includes(:owner).all
-      render json: @rooms, include: [:owner]
+      success(@rooms, include: [:owner])
     end
 
     # Retrieve all members in the room.
     def members
       @room = Room.find(params.require(:room_id))
       if @room
-        render json: @room.members
+        success(@room.members)
       else
-        render json: {}, status: :not_found
+        not_found
       end
     end
 
@@ -21,9 +21,9 @@ module Api
     def create
       @room = Room.new(room_attributes.merge(owner: current_user))
       if @room.save
-        render json: @room, status: :created
+        created(@room)
       else
-        render_json_validation_error(@room)
+        validation_errors(@room)
       end
     end
 
@@ -31,9 +31,9 @@ module Api
     def show
       @room = Room.includes(:owner).find(params.require(:id))
       if @room
-        render json: @room, include: [:owner]
+        success(@room, include: [:owner])
       else
-        render json: {}, status: :not_found
+        not_found
       end
     end
 
@@ -41,9 +41,9 @@ module Api
     def update
       @room = Room.update(params.require(:id), room_attributes)
       if @room.valid?
-        render json: @room, status: 200
+        success
       else
-        render_json_validation_error(@room)
+        validation_errors(@room)
       end
     end
 
@@ -51,9 +51,9 @@ module Api
     def join
       @room = Room.find(params.require(:room_id))
       if @room&.add_user(current_user)
-        render json: {}, status: 200
+        success
       else
-        render json: {}, status: :not_found
+        not_found
       end
     end
 
@@ -61,9 +61,9 @@ module Api
     def leave
       @room = Room.find(params.require(:room_id))
       if @room&.remove_user(current_user)
-        render json: {}, status: 200
+        success
       else
-        render json: {}, status: :not_found
+        not_found
       end
     end
 
@@ -74,9 +74,9 @@ module Api
 
       if @room && @room.owner.id == current_user.id
         @room.destroy
-        render json: {}, status: 200
+        success
       else
-        render json: {}, status: :not_found
+        not_found
       end
     end
 

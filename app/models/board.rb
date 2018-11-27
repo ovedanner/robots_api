@@ -54,7 +54,7 @@ class Board < ApplicationRecord
       pos = possible_positions.delete_at(rand(0...possible_positions.length))
       actual_positions <<
         {
-          color: colors.delete_at(rand(0...colors.length)),
+          robot: colors.delete_at(rand(0...colors.length)),
           position: {
             row: pos[0],
             column: pos[1]
@@ -93,7 +93,7 @@ class Board < ApplicationRecord
     solution = true
     moves.each do |move|
       if valid_move?(move, r_positions)
-        old_pos = r_positions.find { |p| p[:color] == move[:robot] }
+        old_pos = r_positions.find { |p| p[:robot] == move[:robot] }
         old_pos[:position][:row] = move[:to][:row]
         old_pos[:position][:column] = move[:to][:column]
       else
@@ -108,7 +108,7 @@ class Board < ApplicationRecord
       goal_row = goal[:number] / parsed_cells.length
       goal_column = goal[:number] % parsed_cells.length
 
-      actual = r_positions.find { |p| p[:color] == goal_color }
+      actual = r_positions.find { |p| p[:robot] == goal_color }
       actual_row = actual[:position][:row]
       actual_column = actual[:position][:column]
 
@@ -123,7 +123,7 @@ class Board < ApplicationRecord
 
     robot = move[:robot]
     to = move[:to]
-    pos = robot_positions.find { |p| p[:color] == robot }
+    pos = robot_positions.find { |p| p[:robot] == robot }
     return false unless pos
 
     from_row = pos[:position][:row]

@@ -138,9 +138,7 @@ class Game < ApplicationRecord
   # Get the moves timer.
   def moves_timer
     Concurrent::ScheduledTask.new(Game::MOVE_TIMEOUT) do
-      evaluate do
-        close_for_moves!
-      end
+      evaluate(&method(:close_for_moves!))
     end
   end
 

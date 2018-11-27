@@ -34,6 +34,26 @@ RSpec.describe 'Api::Rooms', type: :request do
     end
   end
 
+  describe 'GET /api/rooms/:id' do
+    let(:existing_room) { FactoryBot.create(:room, owner: user) }
+
+    context 'with valid credentials' do
+      it 'will succeed' do
+        get "/api/rooms/#{existing_room.id}",
+            headers: auth_header(user.access_tokens.first.token)
+        assert_success
+      end
+    end
+
+    context 'with invalid credentials' do
+      it 'will not succeed' do
+        get "/api/rooms/#{existing_room.id}",
+            headers: auth_header('bogustoken')
+        assert_unauthorized
+      end
+    end
+  end
+
   describe 'PATCH /api/rooms/:id' do
     let(:existing_room) { FactoryBot.create(:room, owner: user) }
     let(:room_data) do

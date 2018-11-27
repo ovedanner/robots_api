@@ -81,9 +81,9 @@ RSpec.describe Board, type: :model do
           [8, 0, 0, 2],
           [12, 4, 4, 14]
         ].to_json, goals: [
-        { number: 2, color: Board::RED },
+          { number: 2, color: Board::RED },
         { number: 6, color: Board::BLUE }
-      ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
       )
     end
 
@@ -106,9 +106,9 @@ RSpec.describe Board, type: :model do
           [8, 0, 0, 2],
           [12, 4, 4, 14]
         ].to_json, goals: [
-        { number: 2, color: Board::RED },
-        { number: 6, color: Board::BLUE }
-      ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+          { number: 2, color: Board::RED },
+          { number: 6, color: Board::BLUE }
+        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
       )
     end
 

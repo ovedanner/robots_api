@@ -7,9 +7,9 @@ module Api
     def create
       @user = User.new(user_attributes)
       if @user.save
-        render json: @user, status: :created
+        created(@user)
       else
-        render_json_validation_error(@user)
+        validation_errors(@user)
       end
     end
 
@@ -19,13 +19,13 @@ module Api
       user_id = params.require(:id).to_i
 
       if user_id != current_user.id
-        render json: {}, status: :bad_request
+        bad_request
       else
         @user = User.find(user_id)
         if @user
-          render json: @user
+          success(@user)
         else
-          render json: {}, status: :not_found
+          not_found
         end
       end
     end
