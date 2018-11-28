@@ -8,13 +8,13 @@ RUN mkdir -p $RAILS_ROOT
 
 WORKDIR $RAILS_ROOT
 
-ENV RAILS_ENV='production'
-ENV RACK_ENV='production'
+ENV RAILS_ENV development
 
 COPY Gemfile Gemfile
 COPY Gemfile.lock Gemfile.lock
-RUN bundle install --jobs 20 --retry 5 --without development test
+RUN bundle install
 
 COPY . .
+
 EXPOSE 3000
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]

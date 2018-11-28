@@ -4,6 +4,15 @@ services:
     build:
       context: .
       dockerfile: ./docker/app/Dockerfile
+    env_file: .env
+    volumes:
+      - .:/var/www/robots
+    depends_on:
+      - db
+  db:
+    build:
+      context: .
+      dockerfile: ./docker/db/Dockerfile
   web:
     build:
       context: .
