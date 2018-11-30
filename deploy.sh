@@ -11,3 +11,6 @@ docker tag production:latest 764162651181.dkr.ecr.eu-west-1.amazonaws.com/robots
 
 # Push the image.
 docker push 764162651181.dkr.ecr.eu-west-1.amazonaws.com/robots/production
+
+# Tell the service to redeploy.
+aws ecs update-service --cluster robots-cluster --service robots-service --force-new-deployment
