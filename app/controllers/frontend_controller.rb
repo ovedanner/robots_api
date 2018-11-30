@@ -1,5 +1,6 @@
 class FrontendController < ActionController::API
   def index
-    render json: { result: "Test index.html and it has been changed! larpiedur" }
+    html = Redis.new.get('robots:index:current-content')
+    render text: html
   end
 end
