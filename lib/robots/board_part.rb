@@ -38,39 +38,24 @@ module Robots
             top = cells[first][i]
 
             # left -> top.
-            cells[first][i] = cells[last - offset][first]
+            cells[first][i] = BoardPart.rotate_walls_90(cells[last - offset][first])
 
             # bottom -> left.
-            cells[last - offset][first] = cells[last][last - offset]
+            cells[last - offset][first] = BoardPart.rotate_walls_90(cells[last][last - offset])
 
             # right -> bottom.
-            cells[last][last - offset] = cells[i][last]
+            cells[last][last - offset] = BoardPart.rotate_walls_90(cells[i][last])
 
             # top -> right.
-            cells[i][last] = top
+            cells[i][last] = BoardPart.rotate_walls_90(top)
           end
         end
 
         # Also update the positions of the goals.
         goals.each do |goal|
-          rotate_goal_90!(goal)
+          BoardPart.rotate_goal_90!(goal, cells.length)
         end
       end
-    end
-
-    # Rotates the given goal by 90 degrees clockwise. This
-    # simply means updating its number.
-    def rotate_goal_90!(goal)
-      # row becomes column
-      # column becomes length - row
-      nr_rows = cells.length
-      goal_row = goal[:number] / nr_rows
-      goal_column = goal[:number] % nr_rows
-
-      new_goal_row = goal_column
-      new_goal_column = nr_rows - 1 - goal_row
-
-      goal[:number] = (new_goal_row * nr_rows) + new_goal_column
     end
 
     # Merges the rows of the given part with those of this part.
@@ -92,6 +77,30 @@ module Robots
       end
 
       result
+    end
+
+    # Rotates the given goal by 90 degrees clockwise. This
+    # simply means updating its number.
+    def self.rotate_goal_90!(goal, nr_rows)
+      # row becomes column
+      # column becomes length - row
+      goal_row = goal[:number] / nr_rows
+      goal_column = goal[:number] % nr_rows
+
+      new_goal_row = goal_column
+      new_goal_column = nr_rows - 1 - goal_row
+
+      goal[:number] = (new_goal_row * nr_rows) + new_goal_column
+    end
+
+    # Rotates the given walls by 90 degrees.
+    def self.rotate_walls_90(walls)
+      new_walls = 0
+      new_walls += 2 if (walls & 1).positive?
+      new_walls += 4 if (walls & 2).positive?
+      new_walls += 8 if (walls & 4).positive?
+      new_walls += 1 if (walls & 8).positive?
+      new_walls
     end
   end
 end

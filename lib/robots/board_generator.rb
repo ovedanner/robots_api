@@ -7,20 +7,19 @@ module Robots
       all_board_parts = board_parts
 
       # Randomly select four of them. TODO: make sure only one of each part type exists.
-      parts = all_board_parts
-      # indices = (0...4).to_a
-      # 4.times do
-      #   index = indices.slice!(rand(0...indices.length))
-      #   parts << all_board_parts[index]
-      # end
+      parts = []
+      indices = (0...4).to_a.shuffle
+      4.times do
+        parts << all_board_parts[indices.shift]
+      end
 
       # The position of the part in the array indicates
       # its desired position. Rotate parts if needed.
-      # parts.each_with_index do |part, index|
-      #
-      #   rotate_times = (index - part.position).abs
-      #   part.rotate_90!(rotate_times)
-      # end
+      parts.each_with_index do |part, index|
+        next unless part.position != index
+        rotate_times = (index - part.position) % 4
+        part.rotate_90!(rotate_times)
+      end
 
       # Stitch the parts together and update the goal
       # numbers to reflect this.
@@ -41,41 +40,21 @@ module Robots
       part_size = parts[0].cells.length
       target_size = part_size * 2
 
-      # The goals of the second part are in a different column.
-      part_two = parts[1]
-      part_two.goals.each do |goal|
-        goal_row = goal[:number] / part_size
-        goal_column = goal[:number] % part_size
+      parts.each_with_index do |part, idx|
+        part.goals.each do |goal|
+          goal_row = goal[:number] / part_size
+          goal_column = goal[:number] % part_size
 
-        new_goal_column = goal_column + part_size
-        goal[:number] = (goal_row * target_size) + new_goal_column
-      end
+          goal_row += part_size if [2, 3].include?(idx)
+          goal_column += part_size if [1, 2].include?(idx)
 
-      # The goals the of third part are in a different row.
-      part_three = parts[2]
-      part_three.goals.each do |goal|
-        goal_row = goal[:number] / part_size
-        goal_column = goal[:number] % part_size
-
-        new_goal_row = goal_row + part_size
-        goal[:number] = (new_goal_row * target_size) + goal_column
-      end
-
-      # The goals of the last part are in both a different column and
-      # different row.
-      part_four = parts[3]
-      part_four.goals.each do |goal|
-        goal_row = goal[:number] / part_size
-        goal_column = goal[:number] % part_size
-
-        new_goal_row = goal_row + part_size
-        new_goal_column = goal_column + part_size
-        goal[:number] = (new_goal_row * target_size) + new_goal_column
+          goal[:number] = (goal_row * target_size) + goal_column
+        end
       end
 
       # Merge the row cells of the first and second pair.
       top_rows = parts[0].merge_cell_rows(parts[1])
-      bottom_rows = parts[2].merge_cell_rows(parts[3])
+      bottom_rows = parts[3].merge_cell_rows(parts[2])
       cells = top_rows.concat(bottom_rows)
 
       # Simply concatenate the goals.
@@ -136,25 +115,6 @@ module Robots
         Robots::BoardPart::P_2
       ) << Robots::BoardPart.new(
         [
-          [8, 4, 0, 0, 0, 4, 2, 15],
-          [8, 3, 8, 0, 2, 9, 0, 1],
-          [12, 0, 0, 0, 0, 0, 0, 0],
-          [9, 0, 0, 0, 0, 0, 0, 0],
-          [8, 0, 0, 0, 0, 0, 6, 8],
-          [8, 0, 0, 0, 0, 0, 1, 0],
-          [8, 2, 12, 0, 0, 0, 0, 0],
-          [12, 4, 5, 4, 4, 6, 12, 4]
-        ],
-        [
-          { number: 9, color: Board::YELLOW },
-          { number: 13, color: Board::BLUE },
-          { number: 38, color: Board::RED },
-          { number: 50, color: Board::GREEN }
-        ],
-        Robots::BoardPart::RED_CIRCLE,
-        Robots::BoardPart::P_3
-      ) << Robots::BoardPart.new(
-        [
           [15, 8, 0, 0, 0, 0, 0, 2],
           [1, 0, 0, 0, 0, 2, 12, 2],
           [0, 6, 8, 0, 4, 0, 1, 2],
@@ -172,6 +132,25 @@ module Robots
           { number: 50, color: Board::BLUE }
         ],
         Robots::BoardPart::RED_STAR,
+        Robots::BoardPart::P_3
+      ) << Robots::BoardPart.new(
+        [
+          [8, 4, 0, 0, 0, 4, 2, 15],
+          [8, 3, 8, 0, 2, 9, 0, 1],
+          [12, 0, 0, 0, 0, 0, 0, 0],
+          [9, 0, 0, 0, 0, 0, 0, 0],
+          [8, 0, 0, 0, 0, 0, 6, 8],
+          [8, 0, 0, 0, 0, 0, 1, 0],
+          [8, 2, 12, 0, 0, 0, 0, 0],
+          [12, 4, 5, 4, 4, 6, 12, 4]
+        ],
+        [
+          { number: 9, color: Board::YELLOW },
+          { number: 13, color: Board::BLUE },
+          { number: 38, color: Board::RED },
+          { number: 50, color: Board::GREEN }
+        ],
+        Robots::BoardPart::RED_CIRCLE,
         Robots::BoardPart::P_4
       )
       parts

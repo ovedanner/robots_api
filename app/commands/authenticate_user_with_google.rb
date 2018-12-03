@@ -34,7 +34,7 @@ class AuthenticateUserWithGoogle
       authorization_uri: 'https://accounts.google.com/o/oauth2/auth',
       token_credential_uri: 'https://www.googleapis.com/oauth2/v3/token',
       client_id: ENV['GOOGLE_KEY'], client_secret: ENV['GOOGLE_SECRET'],
-      scope: 'email profile', redirect_uri: 'https://robots.themaclipper.nl/torii/redirect.html'
+      scope: 'email profile', redirect_uri: ENV['GOOGLE_REDIRECT_URI']
     ).tap do |client|
       client.code = @authorization_code
       client.fetch_access_token!
