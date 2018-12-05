@@ -58,7 +58,7 @@ the `build` directive to `./docker/web/Dockerfile`. Don't forget to expose port 
 If you don't want to develop using Docker, you can simply run `bundle exec puma`.
 
 ## Tests
-Test cases are made with RSpec, so running `rspec` in the project root folder should do
+Test cases are made with RSpec, so running `bundle exec rspec` in the project root folder should do
 the trick
 
 ## Deployment
