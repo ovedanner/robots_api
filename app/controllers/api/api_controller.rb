@@ -16,9 +16,14 @@ module Api
     private
 
     # Renders HTTP 200.
-    def success(body: {}, options: {})
-      resp = { json: body, status: 200 }.merge(options)
+    def success(body: {}, options: {}, status: 200)
+      resp = { json: body, status: status }.merge(options)
       render resp
+    end
+
+    # Renders HTTP 204 (needed if it's a delete response without content).
+    def success_delete
+      success(status: 204)
     end
 
     # Renders HTTP 201.

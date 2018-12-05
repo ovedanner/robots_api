@@ -23,7 +23,7 @@ module Api
       else
         @user = User.find(user_id)
         if @user
-          success(@user)
+          success(body: @user)
         else
           not_found
         end

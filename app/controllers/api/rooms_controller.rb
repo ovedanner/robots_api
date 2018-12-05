@@ -74,7 +74,7 @@ module Api
 
       if @room && @room.owner.id == current_user.id
         @room.destroy
-        success
+        success_delete
       else
         not_found
       end

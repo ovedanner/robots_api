@@ -25,6 +25,7 @@ module Api
 
       if @token
         @token.destroy
+        success_delete
       else
         render json: {}, status: :not_found
       end

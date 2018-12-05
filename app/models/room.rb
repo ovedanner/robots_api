@@ -7,6 +7,7 @@ class Room < ApplicationRecord
            through: :room_users,
            source: :user,
            dependent: :destroy
+  has_one :game, dependent: :destroy
 
   validates :owner, presence: true
   validates_inclusion_of :open, in: [true, false]
