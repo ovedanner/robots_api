@@ -4,7 +4,7 @@ module Api
     # Retrieve all rooms
     def index
       @rooms = Room.includes(:owner).all
-      success(@rooms, include: [:owner])
+      success(body: @rooms, options: { include: [:owner] })
     end
 
     # Retrieve all members in the room.
@@ -31,7 +31,7 @@ module Api
     def show
       @room = Room.includes(:owner).find(params.require(:id))
       if @room
-        success(@room, include: [:owner])
+        success(body: @room, options: { include: [:owner] })
       else
         not_found
       end

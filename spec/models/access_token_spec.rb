@@ -11,10 +11,11 @@ RSpec.describe AccessToken, type: :model do
 
     context 'when token is not expired' do
       let(:valid_token) do
-        FactoryBot.create(:access_token,
-                          user: user,
-                          token: AccessToken.generate_unique_secure_token,
-                          expires_at: 1.day.from_now)
+        FactoryBot.create(
+          :access_token,
+          user: user,
+          token: AccessToken.generate_unique_secure_token,
+          expires_at: 1.day.from_now)
       end
       it 'returns the token' do
         t = AccessToken.with_unexpired_token(valid_token.token)
@@ -25,10 +26,11 @@ RSpec.describe AccessToken, type: :model do
 
     context 'when token is expired' do
       let(:expired_token) do
-        FactoryBot.create(:access_token,
-                          user: user,
-                          token: AccessToken.generate_unique_secure_token,
-                          expires_at: 12.hours.ago)
+        FactoryBot.create(
+          :access_token,
+          user: user,
+          token: AccessToken.generate_unique_secure_token,
+          expires_at: 12.hours.ago)
       end
       it 'does not return the token' do
         t = AccessToken.with_unexpired_token(expired_token.token)

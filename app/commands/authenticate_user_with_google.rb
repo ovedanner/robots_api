@@ -1,8 +1,7 @@
-# Authenticates a user with a Google authorization code.
-#
 require 'signet/oauth_2/client'
 require 'google/apis/plus_v1'
 
+# Authenticates a user with a Google authorization code.
 class AuthenticateUserWithGoogle
   prepend SimpleCommand
 
@@ -12,7 +11,7 @@ class AuthenticateUserWithGoogle
     @authorization_code = authorization_code
   end
 
-  def call()
+  def call
     info = user_info.get_person('me')
     User.find_or_create_from_google(info)
   end

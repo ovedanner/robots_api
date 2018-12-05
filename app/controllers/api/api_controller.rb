@@ -16,7 +16,7 @@ module Api
     private
 
     # Renders HTTP 200.
-    def success(body = {}, options = {})
+    def success(body: {}, options: {})
       resp = { json: body, status: 200 }.merge(options)
       render resp
     end

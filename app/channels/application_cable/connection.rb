@@ -20,7 +20,6 @@ module ApplicationCable
       else
         reject_unauthorized_connection
       end
-
     end
   end
 end

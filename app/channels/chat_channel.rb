@@ -1,11 +1,10 @@
 # Channel for chatting in a specific room.
 class ChatChannel < ApplicationCable::Channel
-
   # A user can only subscribe to the channel if he is a member
   # of the specified room.
   def subscribed
     @room = Room.find(params[:room])
-    reject unless current_user.is_member_of_room?(@room)
+    reject unless current_user.member_of_room?(@room)
     stream_from "chat:#{@room.id}"
   end
 

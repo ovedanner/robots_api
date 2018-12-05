@@ -14,7 +14,6 @@ gem 'signet'
 gem 'google-api-client'
 gem 'redis-objects'
 gem 'concurrent-ruby', require: 'concurrent'
-gem 'wetransfer_style'
 
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
@@ -45,6 +44,7 @@ group :development, :test do
   gem 'rspec-rails', '~> 3.8'
   gem 'shoulda-matchers', '4.0.0.rc1'
   gem 'faker'
+  gem 'wetransfer_style', git: 'https://github.com/WeTransfer/wetransfer_style.git', branch: 'master'
 end
 
 group :development do

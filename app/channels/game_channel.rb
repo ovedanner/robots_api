@@ -4,7 +4,7 @@ class GameChannel < ApplicationCable::Channel
   # joined the room.
   def subscribed
     @room = Room.includes(:owner).find(params[:room])
-    reject unless current_user.is_member_of_room?(@room)
+    reject unless current_user.member_of_room?(@room)
     stream_from "game:#{@room.id}"
   end
 
@@ -68,7 +68,7 @@ class GameChannel < ApplicationCable::Channel
   end
 
   # Called when a member has a solution in x steps.
-  def has_solution_in(message)
+  def solution_in(message)
     if message['nr_moves']
       nr_moves = message['nr_moves'].to_i
       game = Game.find_by_room_id(@room.id)
@@ -88,7 +88,8 @@ class GameChannel < ApplicationCable::Channel
           attributes = {
             current_nr_moves: nr_moves,
             current_winner: current_user,
-            open_for_moves: true }
+            open_for_moves: true
+          }
           unless game.timer_started?
             # Start the solution timer.
             @moves_timer = game.moves_timer
@@ -117,9 +118,7 @@ class GameChannel < ApplicationCable::Channel
         if game.current_winner?(current_user) && game.open_for_moves?
           if game.solution?(moves)
             # Stop the moves timer if it's running.
-            if @moves_timer&.pending?
-              @moves_timer.cancel
-            end
+            @moves_timer.cancel if @moves_timer&.pending?
 
             # Broadcast winner.
             data = {

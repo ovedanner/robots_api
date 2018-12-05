@@ -4,7 +4,7 @@ class JsonValidator < ActiveModel::EachValidator
     message = (options[:message] || 'Invalid JSON')
     begin
       !value || JSON.parse(value)
-    rescue StandardError
+    rescue
       record.errors[attribute] << message
     end
   end

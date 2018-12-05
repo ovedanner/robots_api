@@ -1,5 +1,4 @@
 # Authenticates a user by email and password
-#
 class AuthenticateUser
   prepend SimpleCommand
 
@@ -10,7 +9,7 @@ class AuthenticateUser
     @password = password
   end
 
-  def call()
+  def call
     user = User.find_by_email(email)
     return user if user&.password_digest && user.authenticate(password)
 

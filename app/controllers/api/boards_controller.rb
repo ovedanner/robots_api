@@ -5,7 +5,7 @@ module Api
     # Retrieves a random board.
     def random
       @board = Robots::BoardGenerator.generate
-      success(@board)
+      success(body: @board)
     end
   end
 end

@@ -39,7 +39,7 @@ class Board < ApplicationRecord
   end
 
   # Return randomly initialized robot positions.
-  def get_random_robot_positions
+  def random_robot_positions
     possible_positions = []
     actual_positions = []
     parsed_cells.each_with_index do |row, r_idx|
@@ -74,7 +74,7 @@ class Board < ApplicationRecord
   def random_goal_not_in(goals)
     remaining = []
     parsed_goals.each do |parsed_goal|
-      unless goals.any? { |g| g[:number] == parsed_goal[:number] && g[:color] == parsed_goal[:color]}
+      unless goals.any? { |g| g[:number] == parsed_goal[:number] && g[:color] == parsed_goal[:color] }
         remaining << parsed_goal
       end
     end
@@ -163,33 +163,30 @@ class Board < ApplicationRecord
           end
         end
       end
-    else
-      # Moving vertically.
-      if from_row < to_row
-        # Moving down.
-        column_cells[from_column].each_with_index do |cell, idx|
-          if idx == from_row
-            valid &&= (cell & 4).zero?
-          elsif idx > from_row && idx < to_row
-            valid &&=
-              valid_path_cell?(idx, from_column, :down, robot_positions)
-          elsif idx == to_row
-            valid &&=
-              valid_target_cell?(idx, from_column, :down, robot_positions)
-          end
+    elsif from_row < to_row
+      # Moving down.
+      column_cells[from_column].each_with_index do |cell, idx|
+        if idx == from_row
+          valid &&= (cell & 4).zero?
+        elsif idx > from_row && idx < to_row
+          valid &&=
+            valid_path_cell?(idx, from_column, :down, robot_positions)
+        elsif idx == to_row
+          valid &&=
+            valid_target_cell?(idx, from_column, :down, robot_positions)
         end
-      else
-        # Moving up.
-        column_cells[from_column].each_with_index do |cell, idx|
-          if idx == from_row
-            valid &&= (cell & 1).zero?
-          elsif idx < from_row && idx > to_row
-            valid &&=
-              valid_path_cell?(idx, from_column, :up, robot_positions)
-          elsif idx == to_row
-            valid &&=
-              valid_target_cell?(idx, from_column, :up, robot_positions)
-          end
+      end
+    else
+      # Moving up.
+      column_cells[from_column].each_with_index do |cell, idx|
+        if idx == from_row
+          valid &&= (cell & 1).zero?
+        elsif idx < from_row && idx > to_row
+          valid &&=
+            valid_path_cell?(idx, from_column, :up, robot_positions)
+        elsif idx == to_row
+          valid &&=
+            valid_target_cell?(idx, from_column, :up, robot_positions)
         end
       end
     end
@@ -244,20 +241,20 @@ class Board < ApplicationRecord
     case direction
     when :up
       result &&= ((walls & 1).positive? && (walls & 4).zero?) ||
-        (next_cell_exists?(row, column, direction) &&
-          contains_robot?(row - 1, column, robot_positions))
+                 (next_cell_exists?(row, column, direction) &&
+                   contains_robot?(row - 1, column, robot_positions))
     when :down
       result &&= ((walls & 4).positive? && (walls & 1).zero?) ||
-        (next_cell_exists?(row, column, direction) &&
-          contains_robot?(row + 1, column, robot_positions))
+                 (next_cell_exists?(row, column, direction) &&
+                   contains_robot?(row + 1, column, robot_positions))
     when :left
       result &&= ((walls & 8).positive? && (walls & 2).zero?) ||
-        (next_cell_exists?(row, column, direction) &&
-          contains_robot?(row, column - 1, robot_positions))
+                 (next_cell_exists?(row, column, direction) &&
+                   contains_robot?(row, column - 1, robot_positions))
     when :right
       result &&= ((walls & 2).positive? && (walls & 8).zero?) ||
-        (next_cell_exists?(row, column, direction) &&
-          contains_robot?(row, column + 1, robot_positions))
+                 (next_cell_exists?(row, column, direction) &&
+                   contains_robot?(row, column + 1, robot_positions))
     else
       result = false
     end

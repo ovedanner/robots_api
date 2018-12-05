@@ -47,7 +47,7 @@ class Game < ApplicationRecord
     update!(
       completed_goals: [].to_json,
       current_nr_moves: -1,
-      robot_positions: board.get_random_robot_positions.to_json,
+      robot_positions: board.random_robot_positions.to_json,
       current_goal: board.random_goal.to_json)
   end
 
@@ -79,10 +79,11 @@ class Game < ApplicationRecord
   # Marks the end of solutions for the current goal.
   def close_for_solution!
     update!(open_for_solution: false, open_for_moves: true)
-    GameChannel.broadcast_to(room_id,
-                             action: 'closed_for_solutions',
-                             current_winner_id: current_winner.id,
-                             current_winner: current_winner.firstname)
+    GameChannel.broadcast_to(
+      room_id,
+      action: 'closed_for_solutions',
+      current_winner_id: current_winner.id,
+      current_winner: current_winner.firstname)
   end
 
   # Marks the current goal as finished. If the user with the least number of
@@ -90,8 +91,9 @@ class Game < ApplicationRecord
   def close_for_moves!
     # No more moves can be provided.
     update!(open_for_moves: false)
-    GameChannel.broadcast_to(room.id,
-                             action: 'closed_for_moves')
+    GameChannel.broadcast_to(
+      room.id,
+      action: 'closed_for_moves')
   end
 
   # Are the given moves a solution towards the current goal?
@@ -100,7 +102,7 @@ class Game < ApplicationRecord
   end
 
   # Called when the given user won the current goal.
-  def next_goal!()
+  def next_goal!
     completed = parsed_completed_goals
     completed << parsed_current_goal
 

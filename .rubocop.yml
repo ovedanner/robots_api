@@ -1,2 +1,8 @@
 inherit_gem:
   wetransfer_style: ruby/default.yml
+
+AllCops:
+  Exclude:
+    - spec/spec_helper.rb
+    - db/schema.rb
+    - bin/*
