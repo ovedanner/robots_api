@@ -31,3 +31,5 @@
 
 # IDE stuffz
 .idea/
+
+./postgres_data/

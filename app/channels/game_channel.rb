@@ -123,7 +123,8 @@ class GameChannel < ApplicationCable::Channel
             # Broadcast winner.
             data = {
               action: 'goal_won_by',
-              winner: current_user.firstname
+              winner: current_user.firstname,
+              moves: message['moves']
             }
             ActionCable.server.broadcast "game:#{@room.id}", data
           end
