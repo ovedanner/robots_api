@@ -96,9 +96,17 @@ class Game < ApplicationRecord
       action: 'closed_for_moves')
   end
 
-  # Are the given moves a solution towards the current goal?
-  def solution?(moves)
-    board.solution?(parsed_robot_positions, parsed_current_goal, moves)
+  # Are the given moves a solution towards the current goal? If so
+  # save new robot positions.
+  def verify_solution!(moves)
+    new_positions = board.solution?(parsed_robot_positions, parsed_current_goal, moves)
+    if new_positions
+      update!(robot_positions: new_positions.to_json)
+
+      return true
+    end
+
+    false
   end
 
   # Called when the given user won the current goal.

@@ -13,6 +13,9 @@ class GameChannel < ApplicationCable::Channel
   def unsubscribed
     @room.remove_user(current_user)
 
+    # Stop any pending timer.
+    @moves_timer.cancel if @moves_timer&.pending?
+
     # If the owner leaves the channel, delete the room and the game.
     if @room.owned_by?(current_user)
       game = Game.find_by_room_id(@room.id)
@@ -114,9 +117,11 @@ class GameChannel < ApplicationCable::Channel
       moves = message['moves'].map { |m| HashWithIndifferentAccess.new(m) }
       game = Game.find_by_room_id(@room.id)
 
+      logger.info("current winner: #{game.current_winner}, open: #{game.open_for_moves}")
       game&.evaluate do
         if game.current_winner?(current_user) && game.open_for_moves?
-          if game.solution?(moves)
+          logger.info("passed: #{message['moves'].length}, current: #{game.current_nr_moves}")
+          if game.verify_solution!(moves)
             # Stop the moves timer if it's running.
             @moves_timer.cancel if @moves_timer&.pending?
 

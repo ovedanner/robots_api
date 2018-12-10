@@ -23,3 +23,5 @@ services:
       dockerfile: ./docker/db/Dockerfile
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432

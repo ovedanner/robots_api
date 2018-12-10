@@ -322,10 +322,14 @@ RSpec.describe Board, type: :model do
         ]
       end
 
-      it 'returns true' do
+      it 'returns new robot positions' do
+        new_positions = [
+          { robot: Board::RED, position: { row: 0, column: 2 } },
+          { robot: Board::BLUE, position: { row: 3, column: 3 } }
+        ]
         goal = board.parsed_goals[0]
         result = board.solution?(robot_positions, goal, moves)
-        expect(result).to eq(true)
+        expect(result).to match_array(new_positions)
       end
     end
   end

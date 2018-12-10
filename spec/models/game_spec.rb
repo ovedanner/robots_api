@@ -237,7 +237,7 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  describe '#is_solution?' do
+  describe '#verify_solution!' do
     let(:board) do
       FactoryBot.create(
         'board',
@@ -272,8 +272,13 @@ RSpec.describe Game, type: :model do
         ]
       end
 
-      it 'succeeds' do
-        expect(game.solution?(valid_moves)).to be(true)
+      it 'updates robot positions' do
+        new_positions = [
+          { robot: Board::RED, position: { row: 0, column: 1 } },
+          { robot: Board::BLUE, position: { row: 2, column: 0 } }
+        ]
+        game.verify_solution!(valid_moves)
+        expect(Game.find(game.id).parsed_robot_positions).to match_array(new_positions)
       end
     end
 
@@ -286,7 +291,7 @@ RSpec.describe Game, type: :model do
       end
 
       it 'fails' do
-        expect(game.solution?(valid_moves)).to be(false)
+        expect(game.verify_solution!(valid_moves)).to be(false)
       end
     end
   end
