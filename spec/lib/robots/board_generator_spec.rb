@@ -9,9 +9,9 @@ RSpec.describe Robots::BoardGenerator do
       hashes = []
       50.times do
         board = described_class.generate
-        cells = board.parsed_cells
-        goals = board.parsed_goals
-        robot_colors = board.parsed_robot_colors
+        cells = board.cells
+        goals = board.goals
+        robot_colors = board.robot_colors
         data = {
           cells: cells,
           goals: goals,

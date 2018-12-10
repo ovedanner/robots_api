@@ -12,22 +12,6 @@ class Game < ApplicationRecord
   validates :completed_goals, json: true, allow_blank: true
   validates :current_goal, json: true, allow_blank: true
 
-  def parsed_robot_positions
-    result = []
-    JSON.parse(robot_positions).each { |p| result << HashWithIndifferentAccess.new(p) }
-    result
-  end
-
-  def parsed_completed_goals
-    result = []
-    JSON.parse(completed_goals).each { |g| result << HashWithIndifferentAccess.new(g) }
-    result
-  end
-
-  def parsed_current_goal
-    HashWithIndifferentAccess.new(JSON.parse(current_goal))
-  end
-
   # The number of seconds after which the current best solution
   # can be provided.
   THINK_TIMEOUT = 10
@@ -45,21 +29,21 @@ class Game < ApplicationRecord
   # and setting a current goal.
   def start_game!
     update!(
-      completed_goals: [].to_json,
+      completed_goals: [],
       current_nr_moves: -1,
-      robot_positions: board.random_robot_positions.to_json,
-      current_goal: board.random_goal.to_json)
+      robot_positions: board.random_robot_positions,
+      current_goal: board.random_goal)
   end
 
   # Formats current board and game data to be sent to
   # users.
   def board_and_game_data
     {
-      cells: board.parsed_cells,
-      goals: board.parsed_goals,
-      robot_colors: board.parsed_robot_colors,
-      robot_positions: parsed_robot_positions,
-      current_goal: parsed_current_goal
+      cells: board.cells,
+      goals: board.goals,
+      robot_colors: board.robot_colors,
+      robot_positions: robot_positions,
+      current_goal: current_goal
     }
   end
 
@@ -99,9 +83,9 @@ class Game < ApplicationRecord
   # Are the given moves a solution towards the current goal? If so
   # save new robot positions.
   def verify_solution!(moves)
-    new_positions = board.solution?(parsed_robot_positions, parsed_current_goal, moves)
+    new_positions = board.solution?(robot_positions, current_goal, moves)
     if new_positions
-      update!(robot_positions: new_positions.to_json)
+      update!(robot_positions: new_positions)
 
       return true
     end
@@ -111,15 +95,15 @@ class Game < ApplicationRecord
 
   # Called when the given user won the current goal.
   def next_goal!
-    completed = parsed_completed_goals
-    completed << parsed_current_goal
+    completed = completed_goals
+    completed << current_goal
 
     new_goal = board.random_goal_not_in(completed)
     if new_goal
       # Get the game ready for the next round.
       update!(
-        current_goal: new_goal.to_json,
-        completed_goals: completed.to_json,
+        current_goal: new_goal,
+        completed_goals: completed,
         open_for_solution: true,
         open_for_moves: false,
         timer_started: false,

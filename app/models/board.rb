@@ -9,28 +9,14 @@ class Board < ApplicationRecord
   validates :goals, json: true, allow_blank: false
   validates :robot_colors, json: true, allow_blank: false
 
-  def parsed_cells
-    JSON.parse(cells)
-  end
-
-  def parsed_goals
-    result = []
-    JSON.parse(goals).each { |g| result << HashWithIndifferentAccess.new(g) }
-    result
-  end
-
-  def parsed_robot_colors
-    JSON.parse(robot_colors)
-  end
-
   # Returns the cells in columns instead of rows.
   def column_cells
     columns = []
 
-    parsed_cells.length.times do |i|
+    cells.length.times do |i|
       column = []
-      parsed_cells .length.times do |j|
-        column << parsed_cells[j][i]
+      cells .length.times do |j|
+        column << cells[j][i]
       end
       columns << column
     end
@@ -42,13 +28,13 @@ class Board < ApplicationRecord
   def random_robot_positions
     possible_positions = []
     actual_positions = []
-    parsed_cells.each_with_index do |row, r_idx|
+    cells.each_with_index do |row, r_idx|
       row.each_with_index do |_, c_idx|
-        possible_positions << [r_idx, c_idx] if parsed_cells[r_idx][c_idx] < 15
+        possible_positions << [r_idx, c_idx] if cells[r_idx][c_idx] < 15
       end
     end
 
-    colors = parsed_robot_colors.slice(0, parsed_robot_colors.length)
+    colors = robot_colors.slice(0, robot_colors.length)
     nr_robots = colors.length
     nr_robots.times do
       pos = possible_positions.delete_at(rand(0...possible_positions.length))
@@ -67,16 +53,19 @@ class Board < ApplicationRecord
 
   # Returns a random goal from the board.
   def random_goal
-    parsed_goals[rand(0...parsed_goals.length)]
+    goals[rand(0...goals.length)]
   end
 
   # Returns a random goal not in the given goals
-  def random_goal_not_in(goals)
+  def random_goal_not_in(given_goals)
     remaining = []
-    parsed_goals.each do |parsed_goal|
-      unless goals.any? { |g| g[:number] == parsed_goal[:number] && g[:color] == parsed_goal[:color] }
-        remaining << parsed_goal
+    goals.each do |parsed_goal|
+      parsed_goal = HashWithIndifferentAccess.new(parsed_goal)
+      any = given_goals.any? do |g|
+        g = HashWithIndifferentAccess.new(g)
+        g[:number] == parsed_goal[:number] && g[:color] == parsed_goal[:color]
       end
+      remaining << parsed_goal unless any
     end
 
     return if remaining.empty?
@@ -89,6 +78,8 @@ class Board < ApplicationRecord
   def solution?(robot_positions, goal, moves)
     # Clone robot positions because we want to make modifications.
     r_positions = robot_positions.deep_dup
+    r_positions.map! { |p| HashWithIndifferentAccess.new(p) }
+    goal = HashWithIndifferentAccess.new(goal)
 
     solution = true
     moves.each do |move|
@@ -105,8 +96,8 @@ class Board < ApplicationRecord
     if solution
       # Check if the goal is reached.
       goal_color = goal[:color]
-      goal_row = goal[:number] / parsed_cells.length
-      goal_column = goal[:number] % parsed_cells.length
+      goal_row = goal[:number] / cells.length
+      goal_column = goal[:number] % cells.length
 
       actual = r_positions.find { |p| p[:robot] == goal_color }
       actual_row = actual[:position][:row]
@@ -140,7 +131,7 @@ class Board < ApplicationRecord
       # Moving horizontally.
       if from_column < to_column
         # Moving right
-        parsed_cells[from_row].each_with_index do |cell, idx|
+        cells[from_row].each_with_index do |cell, idx|
           if idx == from_column
             valid &&= (cell & 2).zero?
           elsif idx > from_column && idx < to_column
@@ -153,7 +144,7 @@ class Board < ApplicationRecord
         end
       else
         # Moving left.
-        parsed_cells[from_row].each_with_index do |cell, idx|
+        cells[from_row].each_with_index do |cell, idx|
           if idx == from_column
             valid &&= (cell & 8).zero?
           elsif idx > from_column && idx < to_column
@@ -202,9 +193,9 @@ class Board < ApplicationRecord
 
     case direction
     when :up, :down
-      result &&= (parsed_cells[row][column] & 5).zero?
+      result &&= (cells[row][column] & 5).zero?
     when :left, :right
-      result &&= (parsed_cells[row][column] & 10).zero?
+      result &&= (cells[row][column] & 10).zero?
     else
       result = false
     end
@@ -225,11 +216,11 @@ class Board < ApplicationRecord
     when :up
       (row - 1) >= 0
     when :down
-      (row + 1) < parsed_cells.length
+      (row + 1) < cells.length
     when :left
       (column - 1) >= 0
     when :right
-      (column + 1) < parsed_cells[row].length
+      (column + 1) < cells[row].length
     else
       false
     end
@@ -238,7 +229,7 @@ class Board < ApplicationRecord
   # Is the given cell a valid target cell coming from the given direction.
   def valid_target_cell?(row, column, direction, robot_positions)
     result = !contains_robot?(row, column, robot_positions)
-    walls = parsed_cells[row][column]
+    walls = cells[row][column]
 
     case direction
     when :up

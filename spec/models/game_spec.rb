@@ -14,10 +14,10 @@ RSpec.describe Game, type: :model do
         [8, 0, 0, 2],
         [8, 0, 0, 2],
         [12, 4, 4, 14]
-      ].to_json, goals: [
+      ], goals: [
         { number: 2, color: Board::RED },
         { number: 6, color: Board::BLUE }
-      ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json)
+      ], robot_colors: [Board::RED, Board::BLUE])
   end
 
   describe '#room' do
@@ -36,9 +36,7 @@ RSpec.describe Game, type: :model do
 
   describe '#robot_positions' do
     let(:valid_robot_positions) do
-      <<~HEREDOC
-        [{"color":"red", "position":{"row":1, "column": 2}}]
-      HEREDOC
+        [{"color": "red", "position": {"row": 1, "column": 2}}]
     end
 
     it { is_expected.to allow_value(nil).for(:robot_positions) }
@@ -50,9 +48,7 @@ RSpec.describe Game, type: :model do
 
   describe '#completed_goals' do
     let(:valid_completed_goals) do
-      <<~HEREDOC
         [{"number": 2, "color": "red"}]
-      HEREDOC
     end
 
     it { is_expected.to allow_value(nil).for(:completed_goals) }
@@ -64,9 +60,7 @@ RSpec.describe Game, type: :model do
 
   describe '#current_goal' do
     let(:valid_current_goal) do
-      <<~HEREDOC
         {"number": 2, "color": "red"}
-      HEREDOC
     end
 
     it { is_expected.to allow_value(nil).for(:current_goal) }
@@ -82,8 +76,8 @@ RSpec.describe Game, type: :model do
     context 'when passing in a board' do
       it 'initializes robots and the current goal' do
         game.start_game!
-        positions = game.parsed_robot_positions
-        goal = game.parsed_current_goal
+        positions = game.robot_positions
+        goal = indifferent_hash(game.current_goal)
         moves = game.current_nr_moves
 
         expect(positions.length).to eq(2)
@@ -207,8 +201,8 @@ RSpec.describe Game, type: :model do
         robot_positions: [
           { robot: Board::RED, position: { row: 2, column: 2 } },
           { robot: Board::BLUE, position: { row: 2, column: 0 } }
-        ].to_json,
-        current_goal: { number: 1, color: Board::RED }.to_json)
+        ],
+        current_goal: { number: 1, color: Board::RED })
     end
 
     context 'when game has just started' do
@@ -221,18 +215,18 @@ RSpec.describe Game, type: :model do
             [8, 0, 0, 2],
             [12, 4, 4, 14]
           ])
-        expect(data[:goals]).to match_array([
+        expect(indifferent_array(data[:goals])).to match_array([
           { number: 2, color: Board::RED },
           { number: 6, color: Board::BLUE }
         ])
-        expect(data[:robot_colors]).to match_array([Board::RED, Board::BLUE])
-        expect(data[:robot_positions]).to match_array(
+        expect(indifferent_array(data[:robot_colors])).to match_array([Board::RED, Board::BLUE])
+        expect(indifferent_array(data[:robot_positions])).to match_array(
           [
             { robot: Board::RED, position: { row: 2, column: 2 } },
             { robot: Board::BLUE, position: { row: 2, column: 0 } }
           ])
-        expect(data[:current_goal][:number]).to eq(1)
-        expect(data[:current_goal][:color]).to eq(Board::RED)
+        expect(indifferent_hash(data[:current_goal])[:number]).to eq(1)
+        expect(indifferent_hash(data[:current_goal])[:color]).to eq(Board::RED)
       end
     end
   end
@@ -245,10 +239,10 @@ RSpec.describe Game, type: :model do
           [9, 1, 3],
           [8, 0, 2],
           [12, 4, 6]
-        ].to_json, goals: [
+        ], goals: [
           { number: 1, color: Board::RED },
           { number: 8, color: Board::BLUE }
-        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+        ], robot_colors: [Board::RED, Board::BLUE]
       )
     end
 
@@ -260,8 +254,8 @@ RSpec.describe Game, type: :model do
         robot_positions: [
           { robot: Board::RED, position: { row: 2, column: 2 } },
           { robot: Board::BLUE, position: { row: 2, column: 0 } }
-        ].to_json,
-        current_goal: { number: 1, color: Board::RED }.to_json)
+        ],
+        current_goal: { number: 1, color: Board::RED })
     end
 
     context 'with valid moves' do
@@ -278,7 +272,8 @@ RSpec.describe Game, type: :model do
           { robot: Board::BLUE, position: { row: 2, column: 0 } }
         ]
         game.verify_solution!(valid_moves)
-        expect(Game.find(game.id).parsed_robot_positions).to match_array(new_positions)
+        actual = indifferent_array(Game.find(game.id).robot_positions)
+        expect(actual).to match_array(new_positions)
       end
     end
 

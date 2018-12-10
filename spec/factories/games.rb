@@ -3,8 +3,8 @@ FactoryBot.define do
     room { nil }
     current_winner { nil }
     board { nil }
-    robot_positions { [].to_json }
-    completed_goals { [].to_json }
-    current_goal { {}.to_json }
+    robot_positions { [] }
+    completed_goals { [] }
+    current_goal { {} }
   end
 end

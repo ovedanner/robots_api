@@ -67,9 +67,9 @@ module Robots
 
       # Create a new board and return it.
       Board.new(
-        cells: cells.to_json,
-        goals: goals.to_json,
-        robot_colors: robot_colors.uniq.to_json)
+        cells: cells,
+        goals: goals,
+        robot_colors: robot_colors.uniq)
     end
 
     # Initializes the static squares of the board.

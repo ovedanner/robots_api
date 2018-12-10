@@ -16,6 +16,22 @@ module BoardHelpers
     expect(goals.length).to eq(17)
     expect(robot_colors.length).to eq(5)
   end
+
+  def indifferent_hash(h)
+    HashWithIndifferentAccess.new(h)
+  end
+
+  def indifferent_array(arr)
+    result = []
+    arr.each do |el|
+      result << if el.is_a?(Hash)
+        HashWithIndifferentAccess.new(el)
+      else
+        el
+                end
+    end
+    result
+  end
 end
 
 RSpec.configure do |config|

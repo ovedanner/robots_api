@@ -3,9 +3,7 @@ require 'rails_helper'
 RSpec.describe Board, type: :model do
   describe '#cells' do
     let(:valid_cells) do
-      <<~HEREDOC
-        [[1,1,1],[2,2,2],[3,3,3]]
-      HEREDOC
+        [[1, 1, 1], [2, 2, 2], [3, 3, 3]]
     end
 
     it { is_expected.to allow_value(nil).for(:cells) }
@@ -17,9 +15,7 @@ RSpec.describe Board, type: :model do
 
   describe '#goals' do
     let(:valid_goals) do
-      <<~HEREDOC
-        [{"number":2,"color":"red"}]
-      HEREDOC
+        [{"number": 2, "color": "red"}]
     end
 
     it { is_expected.to allow_value(nil).for(:goals) }
@@ -31,9 +27,7 @@ RSpec.describe Board, type: :model do
 
   describe '#robot_colors' do
     let(:valid_robot_colors) do
-      <<~HEREDOC
-        ["red", "blue"]
-      HEREDOC
+      %w(red blue)
     end
 
     it { is_expected.to allow_value(nil).for(:robot_colors) }
@@ -52,9 +46,9 @@ RSpec.describe Board, type: :model do
           [5, 6, 7, 8],
           [9, 10, 11, 12],
           [13, 14, 15, 0]
-        ].to_json, goals: [
+        ], goals: [
           { number: 2, color: Board::RED }
-        ].to_json, robot_colors: [Board::RED].to_json
+        ], robot_colors: [Board::RED]
       )
     end
 
@@ -80,16 +74,16 @@ RSpec.describe Board, type: :model do
           [8, 0, 0, 2],
           [8, 0, 0, 2],
           [12, 4, 4, 14]
-        ].to_json, goals: [
+        ], goals: [
           { number: 2, color: Board::RED },
           { number: 6, color: Board::BLUE }
-        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+        ], robot_colors: [Board::RED, Board::BLUE]
       )
     end
 
     context 'when called' do
       it 'returns a random goal' do
-        goal = board.random_goal
+        goal = indifferent_hash(board.random_goal)
         expect(goal[:number]).to be_in([2, 6])
         expect(goal[:color]).to be_in([Board::RED, Board::BLUE])
       end
@@ -105,10 +99,10 @@ RSpec.describe Board, type: :model do
           [8, 0, 0, 2],
           [8, 0, 0, 2],
           [12, 4, 4, 14]
-        ].to_json, goals: [
+        ], goals: [
           { number: 2, color: Board::RED },
           { number: 6, color: Board::BLUE }
-        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+        ], robot_colors: [Board::RED, Board::BLUE]
       )
     end
 
@@ -140,10 +134,10 @@ RSpec.describe Board, type: :model do
           [8, 0, 0, 2],
           [8, 0, 0, 2],
           [12, 4, 4, 14]
-        ].to_json, goals: [
+        ], goals: [
           { number: 2, color: Board::RED },
           { number: 6, color: Board::BLUE }
-        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+        ], robot_colors: [Board::RED, Board::BLUE]
       )
     end
 
@@ -300,10 +294,10 @@ RSpec.describe Board, type: :model do
           [8, 0, 0, 2],
           [8, 0, 0, 2],
           [12, 4, 4, 6]
-        ].to_json, goals: [
+        ], goals: [
           { number: 2, color: Board::RED },
           { number: 6, color: Board::BLUE }
-        ].to_json, robot_colors: [Board::RED, Board::BLUE].to_json
+        ], robot_colors: [Board::RED, Board::BLUE]
       )
     end
 
@@ -327,7 +321,7 @@ RSpec.describe Board, type: :model do
           { robot: Board::RED, position: { row: 0, column: 2 } },
           { robot: Board::BLUE, position: { row: 3, column: 3 } }
         ]
-        goal = board.parsed_goals[0]
+        goal = board.goals[0]
         result = board.solution?(robot_positions, goal, moves)
         expect(result).to match_array(new_positions)
       end
