@@ -32,4 +32,4 @@
 # IDE stuffz
 .idea/
 
-./postgres_data/
+postgres_data/
