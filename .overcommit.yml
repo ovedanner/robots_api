@@ -14,6 +14,11 @@
 # https://github.com/brigade/overcommit#configuration
 #
 # Uncomment the following lines to make the configuration take effect.
+PreCommit:
+  YardCoverage:
+    enabled: true
+    min_coverage_percentage: 70
+    on_warn: fail
 
 #PreCommit:
 #  RuboCop:

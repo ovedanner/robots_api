@@ -32,4 +32,8 @@
 # IDE stuffz
 .idea/
 
+# Postgres volume for Docker
 postgres_data/
+
+# SimpleCov
+coverage/
