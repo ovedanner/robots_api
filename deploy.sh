@@ -8,13 +8,13 @@ AWS_ECS_SERVICE=SERVICE
 $(aws ecr get-login)
 
 # Build the image for production
-sudo docker build --file ./docker/app/Dockerfile --build-arg bundle_install_args="--without development test" -t production .
+docker build --file ./docker/app/Dockerfile --build-arg bundle_install_args="--without development test" -t production .
 
 # Tag the image.
-sudo docker tag production:latest ${AWS_ECS_REPO}
+docker tag production:latest ${AWS_ECS_REPO}
 
 # Push the image.
-sudo docker push ${AWS_ECS_REPO}
+docker push ${AWS_ECS_REPO}
 
 # Tell the service to redeploy.
 aws ecs update-service --force-new-deployment --cluster ${AWS_ECS_CLUSTER} --service ${AWS_ECS_SERVICE}
