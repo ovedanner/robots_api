@@ -11,17 +11,7 @@ class Board < ApplicationRecord
 
   # Returns the cells in columns instead of rows.
   def column_cells
-    columns = []
-
-    cells.length.times do |i|
-      column = []
-      cells .length.times do |j|
-        column << cells[j][i]
-      end
-      columns << column
-    end
-
-    columns
+    cells.transpose
   end
 
   # Return randomly initialized robot positions.
