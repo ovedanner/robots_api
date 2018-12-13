@@ -41,4 +41,33 @@ class Room < ApplicationRecord
       false
     end
   end
+
+  # Starts a new game in the room.
+  def start_new_game!
+    # Close the room.
+    update!(open: false)
+
+    # Clear any existing game.
+    game = Game.find_by_room_id(id)
+    game&.destroy
+
+    # Generate a new board.
+    board = Robots::BoardGenerator.generate
+    board.save
+
+    # Create a new game and broadcast game and
+    # board data to the users.
+    game = Game.new(
+      room: self,
+      open_for_solution: true,
+      open_for_moves: false,
+      board: board)
+    if game.save
+      game.start_game!
+      data = { action: 'start_new_game' }.merge(game.board_and_game_data)
+      ActionCable.server.broadcast "game:#{id}", data
+    else
+      logger.error("Could not create new game for room #{id}")
+    end
+  end
 end

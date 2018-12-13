@@ -19,6 +19,8 @@ RSpec.describe Game, type: :model do
         { number: 6, color: Board::BLUE }
       ], robot_colors: [Board::RED, Board::BLUE])
   end
+
+  # Used to verify broadcast messages.
   let(:action_cable) { ActionCable.server }
 
   describe '#room' do
@@ -265,7 +267,7 @@ RSpec.describe Game, type: :model do
           action: 'new_goal',
           goal: { color: Board::BLUE, number: 8 }
         }
-        expect(action_cable).to receive(:broadcast).with("game:#{game.id}", data)
+        expect(action_cable).to receive(:broadcast).with("game:#{room.id}", data)
 
         game.next_goal!
 
@@ -299,7 +301,7 @@ RSpec.describe Game, type: :model do
       end
 
       it 'finishes the game' do
-        expect(action_cable).to receive(:broadcast).with("game:#{game.id}", action: 'game_finished')
+        expect(action_cable).to receive(:broadcast).with("game:#{room.id}", action: 'game_finished')
 
         game.next_goal!
 
@@ -369,6 +371,78 @@ RSpec.describe Game, type: :model do
 
       it 'fails' do
         expect(game.verify_solution!(valid_moves)).to be(false)
+      end
+    end
+  end
+
+  describe '#solution_in!' do
+    let(:new_winner) do
+      winner = FactoryBot.create('user')
+      FactoryBot.create('room_user', room: room, user: winner)
+      winner
+    end
+
+    let(:board) do
+      FactoryBot.create(
+        'board',
+        cells: [
+          [9, 1, 3],
+          [8, 0, 2],
+          [12, 4, 6]
+        ], goals: [
+          { number: 1, color: Board::RED },
+          { number: 8, color: Board::BLUE }
+        ], robot_colors: [Board::RED, Board::BLUE]
+      )
+    end
+
+    let(:game) do
+      FactoryBot.create(
+        'game',
+        room: room,
+        current_nr_moves: 10,
+        open_for_solution: true,
+        open_for_moves: false,
+        current_winner: user,
+        board: board,
+        robot_positions: [
+          { robot: Board::RED, position: { row: 2, column: 2 } },
+          { robot: Board::BLUE, position: { row: 2, column: 0 } }
+        ],
+        current_goal: { number: 1, color: Board::RED })
+    end
+
+    context 'when a new best number of moves is provided' do
+      it 'updates the game and broadcasts' do
+        broadcast_data = {
+          action: 'solution_in',
+          current_winner: new_winner.firstname,
+          current_winner_id: new_winner.id,
+          current_nr_moves: 8
+        }
+        expect(action_cable).to receive(:broadcast).with("game:#{room.id}", broadcast_data)
+
+        timer = game.solution_in!(new_winner, 8)
+        expect(timer).to be_instance_of(Concurrent::ScheduledTask)
+
+        updated_game = Game.find(game.id)
+        expect(updated_game.current_nr_moves).to eq(8)
+        expect(updated_game.current_winner).to eq(new_winner)
+        expect(updated_game.open_for_moves).to eq(true)
+      end
+    end
+
+    context 'when the provided number of moves is not optimal' do
+      it 'does nothing' do
+        expect(action_cable).to_not receive(:broadcast)
+
+        timer = game.solution_in!(new_winner, 13)
+        expect(timer).to be_falsey
+
+        updated_game = Game.find(game.id)
+        expect(updated_game.current_nr_moves).to eq(10)
+        expect(updated_game.current_winner).to eq(user)
+        expect(updated_game.open_for_moves).to eq(false)
       end
     end
   end

@@ -86,11 +86,10 @@ class Game < ApplicationRecord
     new_positions = board.solution?(robot_positions, current_goal, moves)
     if new_positions
       update!(robot_positions: new_positions)
-
-      return true
+      true
+    else
+      false
     end
-
-    false
   end
 
   # Called when the given user won the current goal.
@@ -125,6 +124,72 @@ class Game < ApplicationRecord
     end
   end
 
+  # Called to indicate that the given user claims to have a solution in the given
+  # number of steps.
+  def solution_in!(user, nr_moves)
+    evaluate do
+      if open_for_solution? &&
+         current_best_solution?(nr_moves)
+
+        data = {
+          action: 'solution_in',
+          current_winner: user.firstname,
+          current_winner_id: user.id,
+          current_nr_moves: nr_moves
+        }
+
+        # Start the game timer if it hasn't been done already.
+        timer = nil
+        attributes = {
+          current_nr_moves: nr_moves,
+          current_winner: user,
+          open_for_moves: true
+        }
+        unless timer_started?
+          # Start the solution timer.
+          timer = moves_timer
+          start_solution_timer(moves_timer)
+          attributes[:timer_started] = true
+        end
+
+        update!(attributes)
+
+        # Inform subscribers that someone claims to have a solution.
+        ActionCable.server.broadcast "game:#{room.id}", data
+
+        # Return the timer so that it can be saved in the channel.
+        timer
+      end
+    end
+  end
+
+  # The given user provided the given moves as a solution to work towards
+  # the current goal.
+  def solution_moves(user, moves)
+    # Make sure the user providing the moves is the current
+    # winner.
+    moves = moves.map { |m| HashWithIndifferentAccess.new(m) }
+
+    evaluate do
+      if current_winner?(user) && open_for_moves?
+        if verify_solution!(moves)
+          # Broadcast the winner.
+          data = {
+            action: 'goal_won_by',
+            winner: user.firstname,
+            moves: moves,
+            robot_positions: robot_positions,
+          }
+          ActionCable.server.broadcast "game:#{room.id}", data
+
+          return true
+        end
+      end
+
+      return false
+    end
+  end
+
   # Start the solution timer.
   def start_solution_timer(moves_timer)
     Rails.application.executor.wrap do
@@ -144,7 +209,7 @@ class Game < ApplicationRecord
     end
   end
 
-  # Evaluates the given block using a mutex on the game.
+  # Evaluates the given block using a Redis lock on the game.
   def evaluate
     solve_lock.lock do
       yield
