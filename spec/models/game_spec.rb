@@ -19,6 +19,7 @@ RSpec.describe Game, type: :model do
         { number: 6, color: Board::BLUE }
       ], robot_colors: [Board::RED, Board::BLUE])
   end
+  let(:action_cable) { ActionCable.server }
 
   describe '#room' do
     it { is_expected.to validate_presence_of(:room) }
@@ -227,6 +228,87 @@ RSpec.describe Game, type: :model do
           ])
         expect(indifferent_hash(data[:current_goal])[:number]).to eq(1)
         expect(indifferent_hash(data[:current_goal])[:color]).to eq(Board::RED)
+      end
+    end
+  end
+
+  describe '#next_goal!' do
+    let(:board) do
+      FactoryBot.create(
+        'board',
+        cells: [
+          [9, 1, 3],
+          [8, 0, 2],
+          [12, 4, 6]
+        ], goals: [
+          { number: 1, color: Board::RED },
+          { number: 8, color: Board::BLUE }
+        ], robot_colors: [Board::RED, Board::BLUE]
+      )
+    end
+
+    context 'when next goal available' do
+      let(:game) do
+        FactoryBot.create(
+          'game',
+          room: room,
+          board: board,
+          robot_positions: [
+            { robot: Board::RED, position: { row: 2, column: 2 } },
+            { robot: Board::BLUE, position: { row: 2, column: 0 } }
+          ],
+          current_goal: { number: 1, color: Board::RED })
+      end
+
+      it 'sets the proper goal' do
+        data = {
+          action: 'new_goal',
+          goal: { color: Board::BLUE, number: 8 }
+        }
+        expect(action_cable).to receive(:broadcast).with("game:#{game.id}", data)
+
+        game.next_goal!
+
+        updated_game = Game.find(game.id)
+        new_goal = indifferent_hash(updated_game.current_goal)
+
+        expect(new_goal[:number]).to eq(8)
+        expect(new_goal[:color]).to eq(Board::BLUE)
+
+        expect(updated_game.open_for_solution).to eq(true)
+        expect(updated_game.open_for_moves).to eq(false)
+        expect(updated_game.current_nr_moves).to eq(-1)
+        expect(updated_game.current_winner).to eq(nil)
+      end
+    end
+
+    context 'when no more goals available' do
+      let(:game) do
+        FactoryBot.create(
+          'game',
+          room: room,
+          board: board,
+          completed_goals: [
+            { number: 8, color: Board::BLUE }
+          ],
+          robot_positions: [
+            { robot: Board::RED, position: { row: 2, column: 2 } },
+            { robot: Board::BLUE, position: { row: 2, column: 0 } }
+          ],
+          current_goal: { number: 1, color: Board::RED })
+      end
+
+      it 'finishes the game' do
+        expect(action_cable).to receive(:broadcast).with("game:#{game.id}", action: 'game_finished')
+
+        game.next_goal!
+
+        updated_game = Game.find(game.id)
+        expect(updated_game.current_goal).to eq(nil)
+        expect(updated_game.open_for_solution).to eq(false)
+        expect(updated_game.open_for_moves).to eq(false)
+        expect(updated_game.current_nr_moves).to eq(-1)
+        expect(updated_game.current_winner).to eq(nil)
       end
     end
   end

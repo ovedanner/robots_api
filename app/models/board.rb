@@ -58,7 +58,7 @@ class Board < ApplicationRecord
       remaining << parsed_goal unless any
     end
 
-    return if remaining.empty?
+    return false if remaining.empty?
 
     remaining[rand(0...remaining.length)]
   end

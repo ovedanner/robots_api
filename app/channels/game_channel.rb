@@ -56,17 +56,7 @@ class GameChannel < ApplicationCable::Channel
   def next_goal
     if @room.owned_by?(current_user)
       game = Game.find_by_room_id(@room.id)
-
-      game&.evaluate do
-        goal = game.next_goal!
-        if goal
-          # Broadcast the new goal.
-          ActionCable.server.broadcast "game:#{@room.id}", action: 'new_goal', goal: goal
-        else
-          # The game is finished!
-          ActionCable.server.broadcast "game:#{@room.id}", action: 'game_finished'
-        end
-      end
+      game&.next_goal!
     end
   end
 
@@ -117,10 +107,8 @@ class GameChannel < ApplicationCable::Channel
       moves = message['moves'].map { |m| HashWithIndifferentAccess.new(m) }
       game = Game.find_by_room_id(@room.id)
 
-      logger.info("current winner: #{game.current_winner}, open: #{game.open_for_moves}")
       game&.evaluate do
         if game.current_winner?(current_user) && game.open_for_moves?
-          logger.info("passed: #{message['moves'].length}, current: #{game.current_nr_moves}")
           if game.verify_solution!(moves)
             # Stop the moves timer if it's running.
             @moves_timer.cancel if @moves_timer&.pending?
@@ -129,7 +117,8 @@ class GameChannel < ApplicationCable::Channel
             data = {
               action: 'goal_won_by',
               winner: current_user.firstname,
-              moves: message['moves']
+              moves: message['moves'],
+              robot_positions: game.robot_positions,
             }
             ActionCable.server.broadcast "game:#{@room.id}", data
           end

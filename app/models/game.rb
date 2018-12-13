@@ -95,25 +95,33 @@ class Game < ApplicationRecord
 
   # Called when the given user won the current goal.
   def next_goal!
-    completed = completed_goals
-    completed << current_goal
+    evaluate do
+      completed = completed_goals
+      completed << current_goal
 
-    new_goal = board.random_goal_not_in(completed)
-    if new_goal
-      # Get the game ready for the next round.
-      update!(
-        current_goal: new_goal,
+      data = {
         completed_goals: completed,
-        open_for_solution: true,
+        open_for_solution: false,
         open_for_moves: false,
         timer_started: false,
         current_winner: nil,
         current_nr_moves: -1
-      )
+      }
+      new_goal = board.random_goal_not_in(completed)
+      if new_goal
+        # Get the game ready for the next round.
+        data[:current_goal] = new_goal
+        data[:open_for_solution] = true
 
-      new_goal
-    else
-      false
+        # Broadcast the new goal.
+        update!(data)
+        ActionCable.server.broadcast "game:#{room.id}", action: 'new_goal', goal: new_goal
+      else
+        # The game is finished!
+        data[:current_goal] = nil
+        update!(data)
+        ActionCable.server.broadcast "game:#{room.id}", action: 'game_finished'
+      end
     end
   end
 
