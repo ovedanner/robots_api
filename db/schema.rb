@@ -45,7 +45,7 @@ ActiveRecord::Schema.define(version: 2018_11_20_094136) do
     t.integer "current_nr_moves"
     t.bigint "current_winner_id"
     t.bigint "board_id"
-    t.boolean "timer_started", default: false
+    t.string "timer"
     t.index ["board_id"], name: "index_games_on_board_id"
     t.index ["current_winner_id"], name: "index_games_on_current_winner_id"
     t.index ["room_id"], name: "index_games_on_room_id"

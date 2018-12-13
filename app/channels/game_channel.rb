@@ -43,9 +43,7 @@ class GameChannel < ApplicationCable::Channel
       game = Game.find_by_room_id(@room.id)
       nr_moves = message['nr_moves'].to_i
 
-      # Store the returned timer (only applicable for the user
-      # that provides the moves first).
-      @moves_timer = game.solution_in!(current_user, nr_moves) if game
+      game.solution_in!(current_user, nr_moves) if game
     end
   end
 
@@ -53,12 +51,7 @@ class GameChannel < ApplicationCable::Channel
   def solution_moves(message)
     if message['moves']
       game = Game.find_by_room_id(@room.id)
-      if game&.solution_moves(current_user, message['moves'])
-        # Stop the moves timer if it's running.
-        logger.info(@moves_timer)
-        logger.info("Timer is running: #{@moves_timer&.pending?}")
-        @moves_timer.cancel if @moves_timer&.pending?
-      end
+      game&.solution_moves(current_user, message['moves'])
     end
   end
 end

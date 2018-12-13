@@ -102,7 +102,7 @@ class Game < ApplicationRecord
         completed_goals: completed,
         open_for_solution: false,
         open_for_moves: false,
-        timer_started: false,
+        timer: nil,
         current_winner: nil,
         current_nr_moves: -1
       }
@@ -145,20 +145,15 @@ class Game < ApplicationRecord
           current_winner: user,
           open_for_moves: true
         }
-        unless timer_started?
+        unless timer
           # Start the solution timer.
-          timer = moves_timer
-          start_solution_timer(moves_timer)
-          attributes[:timer_started] = true
+          start_solution_timer!
         end
 
         update!(attributes)
 
         # Inform subscribers that someone claims to have a solution.
         ActionCable.server.broadcast "game:#{room.id}", data
-
-        # Return the timer so that it can be saved in the channel.
-        timer
       end
     end
   end
@@ -173,6 +168,10 @@ class Game < ApplicationRecord
     evaluate do
       if current_winner?(user) && open_for_moves?
         if verify_solution!(moves)
+          # Clear the timer belonging to the game, so it will
+          # not close for moves.
+          update!(timer: nil)
+
           # Broadcast the winner.
           data = {
             action: 'goal_won_by',
@@ -191,21 +190,22 @@ class Game < ApplicationRecord
   end
 
   # Start the solution timer.
-  def start_solution_timer(moves_timer)
+  def start_solution_timer!
+    timer_id = SecureRandom.hex(10)
+    update!(timer: timer_id)
+
     Rails.application.executor.wrap do
       Concurrent::ScheduledTask.execute(Game::THINK_TIMEOUT) do
         evaluate do
           close_for_solution!
-          moves_timer.execute
+          Concurrent::ScheduledTask.execute(Game::MOVE_TIMEOUT) do
+            # Only close for moves if the timer is still the right one
+            # for the game
+            reload
+            evaluate(&method(:close_for_moves!)) if timer == timer_id
+          end
         end
       end
-    end
-  end
-
-  # Get the moves timer.
-  def moves_timer
-    Concurrent::ScheduledTask.new(Game::MOVE_TIMEOUT) do
-      evaluate(&method(:close_for_moves!))
     end
   end
 

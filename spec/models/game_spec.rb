@@ -422,10 +422,10 @@ RSpec.describe Game, type: :model do
         }
         expect(action_cable).to receive(:broadcast).with("game:#{room.id}", broadcast_data)
 
-        timer = game.solution_in!(new_winner, 8)
-        expect(timer).to be_instance_of(Concurrent::ScheduledTask)
+        game.solution_in!(new_winner, 8)
 
         updated_game = Game.find(game.id)
+        expect(updated_game.timer).to match(/[a-z0-9]{20}/)
         expect(updated_game.current_nr_moves).to eq(8)
         expect(updated_game.current_winner).to eq(new_winner)
         expect(updated_game.open_for_moves).to eq(true)
