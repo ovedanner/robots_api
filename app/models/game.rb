@@ -66,6 +66,7 @@ class Game < ApplicationRecord
     GameChannel.broadcast_to(
       room_id,
       action: 'closed_for_solutions',
+      seconds_left: Game::MOVE_TIMEOUT,
       current_winner_id: current_winner.id,
       current_winner: current_winner.firstname)
   end
@@ -114,7 +115,10 @@ class Game < ApplicationRecord
 
         # Broadcast the new goal.
         update!(data)
-        ActionCable.server.broadcast "game:#{room.id}", action: 'new_goal', goal: new_goal
+        ActionCable.server.broadcast "game:#{room.id}",
+                                     action: 'new_goal',
+                                     goal: new_goal,
+                                     robot_positions: robot_positions
       else
         # The game is finished!
         data[:current_goal] = nil
@@ -133,6 +137,7 @@ class Game < ApplicationRecord
 
         data = {
           action: 'solution_in',
+          seconds_left: Game::THINK_TIMEOUT,
           current_winner: user.firstname,
           current_winner_id: user.id,
           current_nr_moves: nr_moves
@@ -177,7 +182,6 @@ class Game < ApplicationRecord
             action: 'goal_won_by',
             winner: user.firstname,
             moves: moves,
-            robot_positions: robot_positions,
           }
           ActionCable.server.broadcast "game:#{room.id}", data
 

@@ -265,7 +265,11 @@ RSpec.describe Game, type: :model do
       it 'sets the proper goal' do
         data = {
           action: 'new_goal',
-          goal: { color: Board::BLUE, number: 8 }
+          goal: { color: Board::BLUE, number: 8 },
+          robot_positions: JSON.parse([
+            { robot: Board::RED, position: { row: 2, column: 2 } },
+            { robot: Board::BLUE, position: { row: 2, column: 0 } }
+          ].to_json)
         }
         expect(action_cable).to receive(:broadcast).with("game:#{room.id}", data)
 
@@ -418,6 +422,7 @@ RSpec.describe Game, type: :model do
           action: 'solution_in',
           current_winner: new_winner.firstname,
           current_winner_id: new_winner.id,
+          seconds_left: Game::THINK_TIMEOUT,
           current_nr_moves: 8
         }
         expect(action_cable).to receive(:broadcast).with("game:#{room.id}", broadcast_data)
