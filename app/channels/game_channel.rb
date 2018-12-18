@@ -13,9 +13,6 @@ class GameChannel < ApplicationCable::Channel
   def unsubscribed
     @room.remove_user(current_user)
 
-    # Stop any pending timer.
-    @moves_timer.cancel if @moves_timer&.pending?
-
     # If the owner leaves the channel, delete the room and the game.
     if @room.owned_by?(current_user)
       game = Game.find_by_room_id(@room.id)
@@ -24,14 +21,19 @@ class GameChannel < ApplicationCable::Channel
     end
   end
 
-  # The owner of the room can start a game.
+  # Indicates that the current user is ready to play.
+  def ready
+    @room.user_ready!(current_user)
+  end
+
+  # The owner of the room can start a game if all the users are ready.
   def start_new_game
-    @room.start_new_game! if @room.owned_by?(current_user)
+    @room.start_new_game! if @room.owned_by?(current_user) && @room.users_ready?
   end
 
   # Get the next goal.
   def next_goal
-    if @room.owned_by?(current_user)
+    if @room.owned_by?(current_user) && @room.users_ready?
       game = Game.find_by_room_id(@room.id)
       game&.next_goal!
     end

@@ -54,6 +54,7 @@ ActiveRecord::Schema.define(version: 2018_11_20_094136) do
   create_table "room_users", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "room_id", null: false
+    t.boolean "ready", default: false
   end
 
   create_table "rooms", force: :cascade do |t|

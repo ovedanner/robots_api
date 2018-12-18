@@ -17,6 +17,26 @@ class Room < ApplicationRecord
     owner.id == user.id
   end
 
+  # Returns whether or not all the members in the room are ready.
+  def users_ready?
+    nr_members = members.size
+    nr_members > 0 && RoomUser.where(room_id: id, ready: true).count == nr_members
+  end
+
+  # Indicates that all users are ready.
+  def all_users_ready!
+    RoomUser.where(room_id: id).update_all(ready: true)
+  end
+
+  # Indicates that the given user is ready to play.
+  def user_ready!(user)
+    room_user = RoomUser.where(room_id: id, user_id: user.id).first
+    if room_user
+      room_user.ready = true
+      room_user.save!
+    end
+  end
+
   # Adds the given user to the room if possible.
   # If he is already in the room, consider it a success
   # as well.

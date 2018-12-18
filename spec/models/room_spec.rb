@@ -21,7 +21,86 @@ RSpec.describe Room, type: :model do
     it { is_expected.to allow_value(false).for(:open) }
   end
 
-  describe '#add-user' do
+  describe '#user_ready!' do
+    context 'when user not ready yet' do
+      let(:room) { FactoryBot.create(:room_with_member, member: user) }
+
+      it 'marks the user as ready' do
+        room.user_ready!(user)
+        room_user = RoomUser.where(user: user).first
+        expect(room_user.ready).to eq(true)
+      end
+    end
+  end
+
+  describe '#users_ready?' do
+    let(:room) { FactoryBot.create('room') }
+
+    context 'when all users ready' do
+      let!(:user_one) do
+        user = FactoryBot.create('user')
+        FactoryBot.create(:room_user, user_id: user.id, room_id: room.id, ready: true)
+        user
+      end
+
+      let!(:user_two) do
+        user = FactoryBot.create('user')
+        FactoryBot.create(:room_user, user_id: user.id, room_id: room.id, ready: true)
+        user
+      end
+
+      it 'returns true' do
+        expect(room.users_ready?).to eq(true)
+      end
+    end
+
+    context 'when not all users ready' do
+      let!(:user_one) do
+        user = FactoryBot.create('user')
+        FactoryBot.create(:room_user, user_id: user.id, room_id: room.id, ready: true)
+        user
+      end
+
+      let!(:user_two) do
+        user = FactoryBot.create('user')
+        FactoryBot.create(:room_user, user_id: user.id, room_id: room.id, ready: false)
+        user
+      end
+
+      it 'returns false' do
+        expect(room.users_ready?).to eq(false)
+      end
+    end
+  end
+
+  describe '#all_users_ready!' do
+    let(:room) { FactoryBot.create('room') }
+
+    let!(:user_one) do
+      user = FactoryBot.create('user')
+      FactoryBot.create(:room_user, user_id: user.id, room_id: room.id, ready: false)
+      user
+    end
+
+    let!(:user_two) do
+      user = FactoryBot.create('user')
+      FactoryBot.create(:room_user, user_id: user.id, room_id: room.id, ready: false)
+      user
+    end
+
+    context 'when users not ready yet' do
+      it 'marks the users as ready' do
+        room.all_users_ready!
+        room_users = RoomUser.where(room_id: room.id)
+        expect(room_users.length).to eq(2)
+        room_users.each do |r_user|
+          expect(r_user.ready).to eq(true)
+        end
+      end
+    end
+  end
+
+  describe '#add_user' do
     context 'when room is open and user not in room' do
       let(:open_room) { FactoryBot.create(:room, open: true) }
 
