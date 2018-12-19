@@ -12,6 +12,10 @@ RSpec.describe Room, type: :model do
     it { is_expected.to have_many(:room_users) }
   end
 
+  describe '#ready_room_users' do
+    it { is_expected.to have_many(:ready_room_users) }
+  end
+
   describe '#members' do
     it { is_expected.to have_many(:members) }
   end

@@ -139,4 +139,19 @@ RSpec.describe 'Api::Rooms', type: :request do
       end
     end
   end
+
+  describe 'GET /api/rooms/:id/members' do
+    let(:room) { FactoryBot.create(:room_with_member, member: user) }
+    let!(:member_two) { FactoryBot.create(:user_in_room, room: room) }
+    let!(:member_three) { FactoryBot.create(:user_in_room, room: room) }
+
+    context 'with valid credentials' do
+      it 'will succeed' do
+        get "/api/rooms/#{room.id}/members",
+            headers: auth_header(user.access_tokens.first.token)
+        assert_success
+        assert_returned_nr_records(3, 'users')
+      end
+    end
+  end
 end

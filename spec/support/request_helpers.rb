@@ -31,6 +31,15 @@ module RequestHelpers
     expect(body[:data][:attributes]).to include(attrs)
   end
 
+  def assert_returned_nr_records(nr, type)
+    body = response_body
+    records = body[:data]
+    expect(records.length).to eq(nr)
+    records.each do |record|
+      expect(record[:type]).to eq(type)
+    end
+  end
+
   def response_body
     HashWithIndifferentAccess.new(JSON.parse(response.body)) || {}
   end

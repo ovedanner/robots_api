@@ -11,7 +11,7 @@ module Api
     def members
       @room = Room.find(params.require(:room_id))
       if @room
-        success(@room.members)
+        success(body: @room.members)
       else
         not_found
       end

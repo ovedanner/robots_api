@@ -6,6 +6,9 @@ class GameChannel < ApplicationCable::Channel
     @room = Room.includes(:owner).find(params[:room])
     reject unless current_user.member_of_room?(@room)
     stream_from "game:#{@room.id}"
+
+    # Inform the other players that someone has joined.
+    broadcast_nr_players
   end
 
   # Whenever a user unsubscribes from the channel, he leaves the
@@ -19,11 +22,15 @@ class GameChannel < ApplicationCable::Channel
       game&.destroy
       @room.destroy
     end
+
+    # Inform the other players that this player has left.
+    broadcast_nr_players
   end
 
   # Indicates that the current user is ready to play.
   def ready
     @room.user_ready!(current_user)
+    broadcast_readiness
   end
 
   # The owner of the room can start a game if all the users are ready.
@@ -55,5 +62,25 @@ class GameChannel < ApplicationCable::Channel
       game = Game.find_by_room_id(@room.id)
       game&.solution_moves(current_user, message['moves'])
     end
+  end
+
+  private
+
+  # Broadcast the total number of players in the room.
+  def broadcast_nr_players
+    data = {
+      action: 'players',
+      total: @room.room_users.size,
+    }
+    ActionCable.server.broadcast "game:#{@room.id}", data
+  end
+
+  # Broadcast player readiness state for the room.
+  def broadcast_readiness
+    data = {
+      action: 'players_ready',
+      total: @room.room_users.count(&:ready?),
+    }
+    ActionCable.server.broadcast "game:#{@room.id}", data
   end
 end

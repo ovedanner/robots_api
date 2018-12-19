@@ -2,8 +2,8 @@
 class Room < ApplicationRecord
   belongs_to :owner, class_name: 'User', foreign_key: :owner_id
   has_many :room_users, dependent: :destroy
+  has_many :ready_room_users, -> { where(ready: true) }, class_name: 'RoomUser'
   has_many :members,
-           class_name: 'User',
            through: :room_users,
            source: :user,
            dependent: :destroy
