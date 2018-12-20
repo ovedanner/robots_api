@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Robots::BoardGenerator do
-  describe 'generate' do
+  describe '.generate' do
     it 'generates a proper new board' do
       # Generate multiple times to account for
       # the fact that the generator generates random

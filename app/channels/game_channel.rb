@@ -46,6 +46,21 @@ class GameChannel < ApplicationCable::Channel
     end
   end
 
+  # The owner of the room can generate a solution.
+  def generate_solution
+    if @room.owned_by?(current_user)
+      game = Game.find_by_room_id(@room.id)
+      moves = game&.generate_solution
+      if moves
+        data = {
+          action: 'generated_solution',
+          moves: moves,
+        }
+        ActionCable.server.broadcast "game:#{@room.id}", data
+      end
+    end
+  end
+
   # Called when a member has a solution in x steps.
   def solution_in(message)
     if message['nr_moves']

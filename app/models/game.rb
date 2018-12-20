@@ -193,6 +193,13 @@ class Game < ApplicationRecord
     end
   end
 
+  # Tries to generate a solution and return candidate moves.
+  def generate_solution
+    solver = Robots::BoardSolver.new(board)
+    solver.solve(robot_positions, current_goal)
+    solver.candidate
+  end
+
   # Start the solution timer.
   def start_solution_timer!
     timer_id = SecureRandom.hex(10)
