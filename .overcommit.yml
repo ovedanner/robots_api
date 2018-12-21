@@ -18,11 +18,6 @@ PreCommit:
   RuboCop:
     enabled: true
     on_warn: fail # Treat all warnings as failures
-
-PrePush:
-  RSpec:
-    enabled: true
-    on_warn: fail
 #
 #  TrailingWhitespace:
 #    enabled: true
