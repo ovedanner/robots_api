@@ -73,24 +73,27 @@ RSpec.describe Robots::BoardSolver do
       FactoryBot.create(
         'board',
         cells: [
-          [9, 1, 3],
-          [8, 0, 2],
-          [12, 4, 6]
+          [9, 1, 3, 1, 3],
+          [8, 0, 0, 0, 2],
+          [8, 1, 0, 15, 2],
+          [8, 0, 0, 0, 2],
+          [12, 4, 4, 6, 6],
         ], goals: [
-          { number: 0, color: Board::RED },
-        ], robot_colors: [Board::RED, Board::BLUE]
+          { number: 2, color: Board::RED },
+        ], robot_colors: [Board::RED, Board::BLUE, Board::YELLOW]
       )
     end
     let(:robot_positions) do
       [
-        { robot: Board::RED, position: { row: 2, column: 2 }},
-        { robot: Board::BLUE, position: { row: 0, column: 0 }},
+        { robot: Board::RED, position: { row: 3, column: 1 }},
+        { robot: Board::BLUE, position: { row: 2, column: 0 }},
+        { robot: Board::YELLOW, position: { row: 1, column: 3 }},
       ]
     end
 
     it 'generates proper moves' do
       solver = described_class.new(board)
-      solver.solve(robot_positions, goal)
+      solver.solve(robot_positions, board.goals[0])
       expect(solver.candidate).to be_truthy
     end
   end

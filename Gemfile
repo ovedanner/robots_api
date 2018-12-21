@@ -44,7 +44,7 @@ group :development, :test do
   gem 'rspec-rails', '~> 3.8'
   gem 'shoulda-matchers', '4.0.0.rc1'
   gem 'faker'
-  gem 'wetransfer_style', git: 'https://github.com/WeTransfer/wetransfer_style.git', branch: 'master'
+  gem 'wetransfer_style'
 end
 
 group :test do

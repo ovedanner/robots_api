@@ -1,4 +1,6 @@
 module Robots
+  # Solver that tries to find a solution in the least amount of
+  # steps for a certain robot configuration.
   class BoardSolver
     attr_reader :board, :robots
     attr_accessor :candidate
@@ -24,9 +26,8 @@ module Robots
 
     # Tries to recursively work towards the given goal.
     def solve_in(robot_positions, goal, nr_moves, moves = [])
-      # One solution is enough. We also return if there is
-      # no way we could reach the goal from the current positions.
-      return if candidate || goal_unreachable?(robot_positions, goal, nr_moves)
+      # One solution is enough.
+      return if candidate
 
       # Done, did we reach the goal?
       if nr_moves == 0
@@ -54,105 +55,84 @@ module Robots
 
     # Move the given robot up.
     def up(robot, robot_positions)
-      positions = robot_positions.deep_dup
-      r_pos = position(robot, positions)
-
-      # Can't go trough the board.
-      return false if r_pos[:row] == 0
-
-      cells = board.column_cells[r_pos[:column]]
-      idx = r_pos[:row]
-      while idx >= 0
-        # Current cell can't have top wall
-        break if (cells[idx] & 1).positive?
-
-        # Next cell can't have bottom wall or robot
-        if idx - 1 >= 0 && ((cells[idx - 1] & 4).positive? || board.contains_robot?(idx - 1, r_pos[:column], positions))
-          break
-        end
-        idx -= 1
-      end
-      return false if idx == r_pos[:row]
-      r_pos[:row] = idx
-      positions
+      move_vertical(robot, robot_positions, :up)
     end
 
     # Move the given robot down.
     def down(robot, robot_positions)
+      move_vertical(robot, robot_positions, :down)
+    end
+
+    # Move the given robot left.
+    def left(robot, robot_positions)
+      move_horizontally(robot, robot_positions, :left)
+    end
+
+    # Move the given robot right.
+    def right(robot, robot_positions)
+      move_horizontally(robot, robot_positions, :right)
+    end
+
+    private
+
+    # Move vertically.
+    def move_vertical(robot, robot_positions, direction)
       positions = robot_positions.deep_dup
       r_pos = position(robot, positions)
+      increment = direction == :up ? -1 : 1
+      cells = board.column_cells[r_pos[:column]]
 
       # Can't go trough the board.
-      return false if r_pos[:row] == board.cells.length - 1
+      return false if r_pos[:row] == 0 && direction == :up
+      return false if r_pos[:row] == cells.length - 1 && direction == :down
 
-      cells = board.column_cells[r_pos[:column]]
       idx = r_pos[:row]
-      while idx < cells.length
-        # Current cell can't have bottom wall
-        break if (cells[idx] & 4).positive?
+      while idx >= 0
+        cur_wall = direction == :up ? 1 : 4
+        break if (cells[idx] & cur_wall).positive?
 
-        # Next cell can't have top wall or robot
-        if idx + 1 >= 0 && ((cells[idx + 1] & 1).positive? || board.contains_robot?(idx + 1, r_pos[:column], positions))
+        next_idx = idx + increment
+        next_wall = direction == :up ? 4 : 1
+        if next_idx >= 0 && ((cells[next_idx] & next_wall).positive? ||
+          board.contains_robot?(next_idx, r_pos[:column], positions))
           break
         end
-        idx += 1
+        idx += increment
       end
       return false if idx == r_pos[:row]
       r_pos[:row] = idx
       positions
     end
 
-    # Move the given robot left.
-    def left(robot, robot_positions)
+    # Move horizontally.
+    def move_horizontally(robot, robot_positions, direction)
       positions = robot_positions.deep_dup
       r_pos = position(robot, positions)
+      increment = direction == :left ? -1 : 1
+      cells = board.cells[r_pos[:row]]
 
       # Can't go trough the board.
-      return false if r_pos[:column] == 0
+      return false if r_pos[:column] == 0 && direction == :left
+      return false if r_pos[:column] == cells.length - 1 && direction == :right
 
-      cells = board.cells[r_pos[:row]]
       idx = r_pos[:column]
       while idx >= 0
         # Current cell can't have left wall
-        break if (cells[idx] & 8).positive?
+        cur_wall = direction == :left ? 8 : 2
+        break if (cells[idx] & cur_wall).positive?
 
-        # Next cell can't have right wall or robot
-        if idx - 1 >= 0 && ((cells[idx - 1] & 2).positive? || board.contains_robot?(r_pos[:row], idx - 1, positions))
+        next_idx = idx + increment
+        next_wall = direction == :left ? 2 : 8
+        if next_idx >= 0 && ((cells[next_idx] & next_wall).positive? ||
+          board.contains_robot?(r_pos[:row], next_idx, positions))
           break
         end
-        idx -= 1
+        idx += increment
       end
       return false if idx == r_pos[:column]
       r_pos[:column] = idx
       positions
     end
-
-    # Move the given robot right.
-    def right(robot, robot_positions)
-      positions = robot_positions.deep_dup
-      r_pos = position(robot, positions)
-
-      # Can't go trough the board.
-      return false if r_pos[:column] == board.cells.length - 1
-
-      cells = board.cells[r_pos[:row]]
-      idx = r_pos[:column]
-      while idx < cells.length
-        # Current cell can't have right wall
-        break if (cells[idx] & 2).positive?
-
-        # Next cell can't have left wall or robot
-        if idx + 1 >= 0 && ((cells[idx + 1] & 8).positive? || board.contains_robot?(r_pos[:row], idx + 1, positions))
-          break
-        end
-        idx += 1
-      end
-      return false if idx == r_pos[:column]
-      r_pos[:column] = idx
-      positions
-    end
-
-    private
 
     # Retrieves the position of the given robot.
     def position(robot, robot_positions)
@@ -167,19 +147,6 @@ module Robots
       r_number = (r_pos[:row] * board.cells.length) + r_pos[:column]
 
       r_number == goal[:number]
-    end
-
-    # Determines if the goal is even still reachable from the given
-    # robot positions. The fastest you could possibly go is the
-    # Euclidian distance between the current cell of the target robot
-    # and the goal cell.
-    def goal_unreachable?(robot_positions, goal, moves_left)
-      r_pos = position(goal[:color], robot_positions)
-      goal_row = goal[:number] / board.cells.length
-      goal_column = goal[:number] % board.cells.length
-      fastest = (goal_row - r_pos[:row]).abs + (goal_column - r_pos[:column])
-
-      fastest > moves_left
     end
 
     # Determines if the given move is 'negated' by moving

@@ -93,9 +93,7 @@ class Board < ApplicationRecord
       actual_row = actual[:position][:row]
       actual_column = actual[:position][:column]
 
-      if goal_row == actual_row && goal_column == actual_column
-        return r_positions
-      end
+      return r_positions if goal_row == actual_row && goal_column == actual_column
     end
 
     false
