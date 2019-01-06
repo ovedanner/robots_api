@@ -15,6 +15,10 @@ class User < ApplicationRecord
   validates :firstname, presence: true, allow_blank: false
   validates :password, presence: false, password: true
 
+  after_create do
+    UserMailer.with(user: self).welcome_email.deliver_later
+  end
+
   # Determines if the user is a member of the given room.
   def member_of_room?(room)
     room.open && RoomUser.exists?(room_id: room.id, user_id: id)

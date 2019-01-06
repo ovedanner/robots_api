@@ -37,3 +37,6 @@ postgres_data/
 
 # SimpleCov
 coverage/
+
+# Vim
+*.swp

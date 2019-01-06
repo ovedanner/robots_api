@@ -34,6 +34,7 @@ module RobotsApi
 
     # Make sure the /lib directory is eager loaded for prd
     config.eager_load_paths << Rails.root.join('lib')
+    config.active_job.queue_adapter = :sidekiq
 
     config.middleware.insert_before 0, Rack::Cors do
       allow do
