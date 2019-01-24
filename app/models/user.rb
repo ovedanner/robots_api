@@ -21,7 +21,7 @@ class User < ApplicationRecord
 
   # Determines if the user is a member of the given room.
   def member_of_room?(room)
-    room.open && RoomUser.exists?(room_id: room.id, user_id: id)
+    RoomUser.exists?(room_id: room.id, user_id: id)
   end
 
   # Uses the given Google info to either create a new user

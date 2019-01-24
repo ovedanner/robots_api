@@ -64,9 +64,6 @@ class Room < ApplicationRecord
 
   # Starts a new game in the room.
   def start_new_game!
-    # Close the room.
-    update!(open: false)
-
     # Clear any existing game.
     game = Game.find_by_room_id(id)
     game&.destroy

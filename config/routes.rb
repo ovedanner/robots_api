@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       get '/members', to: 'rooms#members'
       post '/join', to: 'rooms#join'
       post '/leave', to: 'rooms#leave'
+      get '/game', to: 'games#for_room'
     end
     get '/boards/random', to: 'boards#random'
     mount ActionCable.server => '/cable'

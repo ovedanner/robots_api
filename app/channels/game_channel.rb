@@ -16,13 +16,6 @@ class GameChannel < ApplicationCable::Channel
   def unsubscribed
     @room.remove_user(current_user)
 
-    # If the owner leaves the channel, delete the room and the game.
-    if @room.owned_by?(current_user)
-      game = Game.find_by_room_id(@room.id)
-      game&.destroy
-      @room.destroy
-    end
-
     # Inform the other players that this player has left.
     broadcast_nr_players
   end
@@ -43,21 +36,6 @@ class GameChannel < ApplicationCable::Channel
     if @room.owned_by?(current_user) && @room.users_ready?
       game = Game.find_by_room_id(@room.id)
       game&.next_goal!
-    end
-  end
-
-  # The owner of the room can generate a solution.
-  def generate_solution
-    if @room.owned_by?(current_user)
-      game = Game.find_by_room_id(@room.id)
-      moves = game&.generate_solution
-      if moves
-        data = {
-          action: 'generated_solution',
-          moves: moves,
-        }
-        ActionCable.server.broadcast "game:#{@room.id}", data
-      end
     end
   end
 
