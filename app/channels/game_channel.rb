@@ -53,7 +53,8 @@ class GameChannel < ApplicationCable::Channel
   def solution_moves(message)
     if message['moves']
       game = Game.find_by_room_id(@room.id)
-      game&.solution_moves(current_user, message['moves'])
+      moves = message['moves'].map { |m| HashWithIndifferentAccess.new(m) }
+      game&.solution_moves(current_user, moves)
     end
   end
 

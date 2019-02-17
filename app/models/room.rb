@@ -20,7 +20,8 @@ class Room < ApplicationRecord
   # Returns whether or not all the members in the room are ready.
   def users_ready?
     nr_members = members.size
-    nr_members > 0 && RoomUser.where(room_id: id, ready: true).count == nr_members
+    nr_ready = RoomUser.where(room_id: id, ready: true).count
+    nr_members > 0 && nr_ready == nr_members
   end
 
   # Indicates that all users are ready.

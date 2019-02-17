@@ -168,8 +168,6 @@ class Game < ApplicationRecord
   def solution_moves(user, moves)
     # Make sure the user providing the moves is the current
     # winner.
-    moves = moves.map { |m| HashWithIndifferentAccess.new(m) }
-
     evaluate do
       if current_winner?(user) && open_for_moves?
         if verify_solution!(moves)
