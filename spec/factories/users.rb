@@ -9,7 +9,7 @@ FactoryBot.define do
 
     transient do
       room {}
-      ready { false }
+      ready { true }
     end
 
     factory :user_with_access_token do

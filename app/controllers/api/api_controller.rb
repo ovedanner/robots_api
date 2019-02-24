@@ -16,8 +16,9 @@ module Api
     private
 
     # Renders HTTP 200.
-    def success(body: {}, options: {}, status: 200)
+    def success(body: {}, options: {}, status: 200, scope: nil)
       resp = { json: body, status: status }.merge(options)
+      resp[:scope] = scope if scope
       render resp
     end
 

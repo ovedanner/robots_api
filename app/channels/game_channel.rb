@@ -8,7 +8,7 @@ class GameChannel < ApplicationCable::Channel
     stream_from "game:#{@room.id}"
 
     # Inform the other players that someone has joined.
-    broadcast_nr_players
+    broadcast_users_changed
   end
 
   # Whenever a user unsubscribes from the channel, he leaves the
@@ -17,13 +17,13 @@ class GameChannel < ApplicationCable::Channel
     @room.remove_user(current_user)
 
     # Inform the other players that this player has left.
-    broadcast_nr_players
+    broadcast_users_changed
   end
 
   # Indicates that the current user is ready to play.
   def ready
     @room.user_ready!(current_user)
-    broadcast_readiness
+    broadcast_ready_changed
   end
 
   # The owner of the room can start a game if all the users are ready.
@@ -60,20 +60,18 @@ class GameChannel < ApplicationCable::Channel
 
   private
 
-  # Broadcast the total number of players in the room.
-  def broadcast_nr_players
+  # Signal that the number of players in the room has changed.
+  def broadcast_users_changed
     data = {
-      action: 'players',
-      total: @room.room_users.size,
+      action: 'players_changed'
     }
     ActionCable.server.broadcast "game:#{@room.id}", data
   end
 
-  # Broadcast player readiness state for the room.
-  def broadcast_readiness
+  # Signal that the number of ready players in the room has changed.
+  def broadcast_ready_changed
     data = {
-      action: 'players_ready',
-      total: @room.room_users.count(&:ready?),
+      action: 'players_ready'
     }
     ActionCable.server.broadcast "game:#{@room.id}", data
   end

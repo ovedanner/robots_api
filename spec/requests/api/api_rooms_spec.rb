@@ -141,16 +141,43 @@ RSpec.describe 'Api::Rooms', type: :request do
   end
 
   describe 'GET /api/rooms/:id/members' do
-    let(:room) { FactoryBot.create(:room_with_member, member: user) }
+    let(:room) do
+      room = FactoryBot.create(:room)
+      FactoryBot.create(:room_user, room: room, user: user, ready: true)
+      room
+    end
     let!(:member_two) { FactoryBot.create(:user_in_room, room: room) }
-    let!(:member_three) { FactoryBot.create(:user_in_room, room: room) }
+    let!(:member_not_ready) { FactoryBot.create(:user_in_room, room: room, ready: false) }
 
     context 'with valid credentials' do
-      it 'will succeed' do
-        get "/api/rooms/#{room.id}/members",
-            headers: auth_header(user.access_tokens.first.token)
-        assert_success
-        assert_returned_nr_records(3, 'users')
+      context "when user in the room" do
+        it 'will succeed' do
+          get "/api/rooms/#{room.id}/members",
+              headers: auth_header(user.access_tokens.first.token)
+
+          assert_success
+          assert_returned_nr_records(3, 'users')
+
+          expected_values = {
+            user.id => { ready: true },
+            member_two.id => { ready: true },
+            member_not_ready.id => { ready: false },
+          }
+          assert_each_has_attributes(expected_values)
+        end
+      end
+
+      context "when user is not in the room" do
+        let(:other_user) do
+          FactoryBot.create(:user_with_access_token)
+        end
+
+        it "will not succeed" do
+          get "/api/rooms/#{room.id}/members",
+              headers: auth_header(other_user.access_tokens.first.token)
+
+          assert_not_found
+        end
       end
     end
   end

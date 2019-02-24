@@ -40,6 +40,16 @@ module RequestHelpers
     end
   end
 
+  def assert_each_has_attributes(map)
+    response_body[:data].each do |record|
+      actual_values = record[:attributes]
+      expected_values = map[record[:id].to_i]
+      expected_values.keys.each do |attr|
+        expect(actual_values[attr.to_s]).to eq(expected_values[attr])
+      end
+    end
+  end
+
   def response_body
     HashWithIndifferentAccess.new(JSON.parse(response.body)) || {}
   end

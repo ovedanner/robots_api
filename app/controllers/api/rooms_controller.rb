@@ -9,9 +9,11 @@ module Api
 
     # Retrieve all members in the room.
     def members
-      @room = Room.find(params.require(:room_id))
-      if @room
-        success(body: @room.members)
+      # Include the join model, because we want the serializer to set
+      # the ready flag on the user.
+      @room = Room.includes(:room_users).find(params.require(:room_id))
+      if @room && current_user.member_of_room?(@room)
+        success(body: @room.members, scope: { room: @room })
       else
         not_found
       end

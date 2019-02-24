@@ -6,6 +6,7 @@ FactoryBot.define do
 
     transient do
       member {}
+      ready { true }
     end
 
     factory :open_room do
@@ -18,7 +19,7 @@ FactoryBot.define do
 
     factory :room_with_member do
       after :create do |room, evaluator|
-        FactoryBot.create(:room_user, room_id: room.id, user_id: evaluator.member.id)
+        FactoryBot.create(:room_user, room_id: room.id, user_id: evaluator.member.id, ready: evaluator.ready)
       end
     end
   end
