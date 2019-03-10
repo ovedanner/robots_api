@@ -76,6 +76,11 @@ class Game < ApplicationRecord
   def close_for_moves!
     # No more moves can be provided.
     update!(open_for_moves: false)
+
+    # Everybody has to mark themselves as ready again.
+    room.no_users_ready!
+
+    # Let everyone know.
     GameChannel.broadcast_to(
       room.id,
       action: 'closed_for_moves')
@@ -93,7 +98,7 @@ class Game < ApplicationRecord
     end
   end
 
-  # Called when the given user won the current goal.
+  # Set everything up for the next goal.
   def next_goal!
     evaluate do
       completed = completed_goals
@@ -123,6 +128,10 @@ class Game < ApplicationRecord
         # The game is finished!
         data[:current_goal] = nil
         update!(data)
+
+        # Everybody has to mark themselves as ready again.
+        room.no_users_ready!
+
         ActionCable.server.broadcast "game:#{room.id}", action: 'game_finished'
       end
     end
@@ -174,6 +183,9 @@ class Game < ApplicationRecord
           # Clear the timer belonging to the game, so it will
           # not close for moves.
           update!(timer: nil)
+
+          # Everyone has to mark themselves as ready again.
+          room.no_users_ready!
 
           # Broadcast the winner.
           data = {

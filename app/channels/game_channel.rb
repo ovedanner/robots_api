@@ -28,12 +28,12 @@ class GameChannel < ApplicationCable::Channel
 
   # The owner of the room can start a game if all the users are ready.
   def start_new_game
-    @room.start_new_game! if @room.owned_by?(current_user) && @room.users_ready?
+    @room.start_new_game! if @room.owned_by?(current_user) && @room.all_users_ready?
   end
 
   # Get the next goal.
   def next_goal
-    if @room.owned_by?(current_user) && @room.users_ready?
+    if @room.owned_by?(current_user) && @room.all_users_ready?
       game = Game.find_by_room_id(@room.id)
       game&.next_goal!
     end

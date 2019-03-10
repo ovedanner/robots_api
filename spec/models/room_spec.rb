@@ -33,7 +33,7 @@ RSpec.describe Room, type: :model do
     end
   end
 
-  describe '#users_ready?' do
+  describe '#all_users_ready?' do
     let(:room) { FactoryBot.create('room') }
 
     context 'when all users ready' do
@@ -50,7 +50,7 @@ RSpec.describe Room, type: :model do
       end
 
       it 'returns true' do
-        expect(room.users_ready?).to eq(true)
+        expect(room.all_users_ready?).to eq(true)
       end
     end
 
@@ -68,7 +68,7 @@ RSpec.describe Room, type: :model do
       end
 
       it 'returns false' do
-        expect(room.users_ready?).to eq(false)
+        expect(room.all_users_ready?).to eq(false)
       end
     end
   end
@@ -95,6 +95,33 @@ RSpec.describe Room, type: :model do
         expect(room_users.length).to eq(2)
         room_users.each do |r_user|
           expect(r_user.ready).to eq(true)
+        end
+      end
+    end
+  end
+
+  describe '#no_users_ready!' do
+    let(:room) { FactoryBot.create('room') }
+
+    let!(:user_one) do
+      user = FactoryBot.create('user')
+      FactoryBot.create(:room_user, user_id: user.id, room_id: room.id, ready: true)
+      user
+    end
+
+    let!(:user_two) do
+      user = FactoryBot.create('user')
+      FactoryBot.create(:room_user, user_id: user.id, room_id: room.id, ready: true)
+      user
+    end
+
+    context 'when users ready' do
+      it 'marks the users as not ready' do
+        room.no_users_ready!
+        room_users = RoomUser.where(room_id: room.id)
+        expect(room_users.length).to eq(2)
+        room_users.each do |r_user|
+          expect(r_user.ready).to eq(false)
         end
       end
     end

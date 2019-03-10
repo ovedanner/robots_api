@@ -4,7 +4,11 @@ RSpec.describe Game, type: :model do
   # Default user, room and board for game tests.
   let(:user) { FactoryBot.create('user') }
   let(:room) do
-    FactoryBot.create(:room_with_member, member: user, owner: user)
+    FactoryBot.create(
+      :room_with_member,
+      member: user,
+      owner: user,
+      ready: true)
   end
   let(:board) do
     FactoryBot.create(
@@ -127,6 +131,10 @@ RSpec.describe Game, type: :model do
       it 'closes the game' do
         game.close_for_moves!
         expect(game.open_for_moves).to be(false)
+
+        room_users = game.room.room_users
+        expect(room_users.size).to eq(1)
+        expect(room_users.first.ready).to eq(false)
       end
     end
   end
