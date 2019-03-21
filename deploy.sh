@@ -7,7 +7,7 @@ AWS_ECS_SERVICE=SERVICE
 # Authenticate and connect to the repository.
 $(aws ecr get-login)
 
-# Build the image for production
+# Build the image for production.
 docker build --file ./docker/app/Dockerfile --build-arg bundle_install_args="--without development test" -t production .
 
 # Tag the image.
