@@ -4,7 +4,7 @@ AWS_ECS_REPO=REPO_URL
 AWS_ECS_CLUSTER=CLUSTER
 AWS_ECS_SERVICE=SERVICE
 
-# Connect to the repository.
+# Authenticate and connect to the repository.
 $(aws ecr get-login)
 
 # Build the image for production
