@@ -16,5 +16,5 @@ docker tag production:latest ${AWS_ECS_REPO}
 # Push the image.
 docker push ${AWS_ECS_REPO}
 
-# Tell the service to redeploy.
+# Tell the service to forcibly redeploy.
 aws ecs update-service --force-new-deployment --cluster ${AWS_ECS_CLUSTER} --service ${AWS_ECS_SERVICE}
