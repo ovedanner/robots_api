@@ -173,29 +173,4 @@ RSpec.describe Room, type: :model do
       end
     end
   end
-
-  describe '#start_new_game!' do
-    let(:room) do
-      FactoryBot.create(:room_with_member, member: user, open: true)
-    end
-
-    context 'when room owner starts a new game' do
-      it 'will succeed' do
-        room.start_new_game!
-        game = Game.find_by_room_id(room.id)
-
-        expect(game.board).to be_instance_of(Board)
-        expect(game.open_for_solution).to eq(true)
-        expect(game.open_for_moves).to eq(false)
-        expect(game.completed_goals).to match_array([])
-        expect(game.current_nr_moves).to eq(-1)
-
-        # Only do a basic type check for robot postiions and
-        # the current goal. The rest is handled by the appropriate
-        # method of the game spec.
-        expect(game.robot_positions).to be_instance_of(Array)
-        expect(game.current_goal).to be_instance_of(Hash)
-      end
-    end
-  end
 end

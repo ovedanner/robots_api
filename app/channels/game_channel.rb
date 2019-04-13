@@ -28,14 +28,15 @@ class GameChannel < ApplicationCable::Channel
 
   # The owner of the room can start a game if all the users are ready.
   def start_new_game
-    @room.start_new_game! if @room.owned_by?(current_user) && @room.all_users_ready?
+    GameService.start_new_game(@room) if @room.owned_by?(current_user) && @room.all_users_ready?
   end
 
   # Get the next goal.
   def next_goal
     if @room.owned_by?(current_user) && @room.all_users_ready?
       game = Game.find_by_room_id(@room.id)
-      game&.next_goal!
+
+      GameService.new(game).next_goal if game.present?
     end
   end
 
@@ -45,7 +46,7 @@ class GameChannel < ApplicationCable::Channel
       game = Game.find_by_room_id(@room.id)
       nr_moves = message['nr_moves'].to_i
 
-      game.solution_in!(current_user, nr_moves) if game
+      GameService.new(game).solution_in(current_user, nr_moves) if game.present?
     end
   end
 
@@ -54,7 +55,8 @@ class GameChannel < ApplicationCable::Channel
     if message['moves']
       game = Game.find_by_room_id(@room.id)
       moves = message['moves'].map { |m| HashWithIndifferentAccess.new(m) }
-      game&.solution_moves(current_user, moves)
+
+      GameService.new(game).solution_moves(current_user, moves) if game.present?
     end
   end
 
