@@ -1,7 +1,5 @@
-require 'signet/oauth_2/client'
-require 'google/apis/plus_v1'
+require "signet/oauth_2/client"
 
-# Authenticates a user with a Google authorization code.
 class AuthenticateUserWithGoogle
   prepend SimpleCommand
 
@@ -12,31 +10,19 @@ class AuthenticateUserWithGoogle
   end
 
   def call
-    info = user_info.get_person('me')
-    User.find_or_create_from_google(info)
-  end
-
-  private
-
-  # Create a new Google plus client by passing it our OAuth client
-  # with the authorization code.
-  def user_info
-    Google::Apis::PlusV1::PlusService.new.tap do |userinfo|
-      userinfo.key = ENV['GOOGLE_KEY']
-      userinfo.authorization = google_info
-    end
-  end
-
-  # Create a new OAuth client with the authorization code.
-  def google_info
-    Signet::OAuth2::Client.new(
-      authorization_uri: 'https://accounts.google.com/o/oauth2/auth',
-      token_credential_uri: 'https://www.googleapis.com/oauth2/v3/token',
-      client_id: ENV['GOOGLE_KEY'], client_secret: ENV['GOOGLE_SECRET'],
-      scope: 'email profile', redirect_uri: ENV['GOOGLE_REDIRECT_URI']
+    client = Signet::OAuth2::Client.new(
+      authorization_uri: "https://accounts.google.com/o/oauth2/auth",
+      token_credential_uri: "https://www.googleapis.com/oauth2/v3/token",
+      client_id: ENV["GOOGLE_KEY"], client_secret: ENV["GOOGLE_SECRET"],
+      redirect_uri: ENV["GOOGLE_REDIRECT_URI"]
     ).tap do |client|
       client.code = @authorization_code
       client.fetch_access_token!
     end
+
+    id_token = client.id_token.split(".")[1]
+    payload = JSON.parse(Base64.decode64(id_token))
+
+    User.find_or_create_by(email: payload["email"])
   end
 end
